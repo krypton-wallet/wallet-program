@@ -7,10 +7,10 @@ use {
 };
 
 #[test]
-fn test_echo() {
+fn test_recovery() {
     let program_id = Pubkey::new_unique();
     let mut program_test = ProgramTest::default();
-    program_test.add_program("echo", program_id, None);
+    program_test.add_program("recovery", program_id, None);
 
     let auth = Keypair::new();
     program_test.add_account(

@@ -10,8 +10,8 @@ use solana_program::{
     rent::Rent, sysvar::Sysvar, 
 };
 
-use crate::{error::EchoError, state::WalletHeader};
-use crate::instruction::EchoInstruction;
+use crate::{error::RecoveryError, state::WalletHeader};
+use crate::instruction::RecoveryInstruction;
 
 pub struct Processor {}
 
@@ -21,7 +21,7 @@ impl Processor {
         accounts: &[AccountInfo],
         instruction_data: &[u8],
     ) -> ProgramResult {
-        let instruction = EchoInstruction::try_from_slice(instruction_data)
+        let instruction = RecoveryInstruction::try_from_slice(instruction_data)
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         let account_info_iter = &mut accounts.iter();
@@ -29,7 +29,7 @@ impl Processor {
         let usdc_pk = Pubkey::from_str(usdc_pk_str).unwrap();
 
         match instruction {
-            EchoInstruction::InitializeSocialWallet {
+            RecoveryInstruction::InitializeSocialWallet {
                 acct_len,
                 recovery_threshold,
             } => {
@@ -104,7 +104,7 @@ impl Processor {
 
                 Ok(())
             }
-            EchoInstruction::AddToRecoveryList { acct_len } => {
+            RecoveryInstruction::AddToRecoveryList { acct_len } => {
                 msg!("Instruction: AddToRecovery");
 
                 let wallet_info = next_account_info(account_info_iter)?;
@@ -131,7 +131,9 @@ impl Processor {
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
                 // assert that total number of guardians are less than or equal to 10
-                assert!(old_acct_len + acct_len <= 10);
+                if old_acct_len + acct_len > 10 {
+                    return Err(RecoveryError::TooManyGuardians.into());
+                }
 
                 // Deserialize into WalletHeader from wallet program data
                 let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
@@ -152,7 +154,7 @@ impl Processor {
 
                 Ok(())
             }
-            EchoInstruction::ModifyRecoveryList {
+            RecoveryInstruction::ModifyRecoveryList {
                 acct_len,
             } => {
                 msg!("Instruction: ModifyRecoveryList");
@@ -180,9 +182,6 @@ impl Processor {
                 let old_acct_len = wallet_data[1];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
-                // assert that total number of guardians are less than or equal to 10
-                assert!(old_acct_len + acct_len <= 10, "too many guardians added");
-
                 // Deserialize into WalletHeader from wallet program data
                 let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
 
@@ -194,7 +193,9 @@ impl Processor {
                     let new_guardian_pk = new_guardian_info.key;
 
                     // check if the key to be modified is in the data
-                    assert!(initial_data.guardians.contains(old_guardian_pk), "the guardian to be replaced is not in the data");
+                    if !initial_data.guardians.contains(old_guardian_pk) {
+                        return Err(RecoveryError::ModifiedGuardianNotFound.into());
+                    }
 
                     // get index of old guardian key in the data
                     let index = initial_data.guardians.iter().position(|&k| k == *old_guardian_pk).unwrap();
@@ -218,7 +219,7 @@ impl Processor {
 
                 Ok(())
             }
-            EchoInstruction::DeleteFromRecoveryList {
+            RecoveryInstruction::DeleteFromRecoveryList {
                 acct_len,
             } => {
                 msg!("Instruction: DeleteFromRecoveryList");
@@ -248,7 +249,9 @@ impl Processor {
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
                 // assert that total number of guardians are greater than or equal to the recovery threshold
-                assert!(old_acct_len - acct_len >= recovery_threshold, "too many guardians deleted");
+                if old_acct_len - acct_len < recovery_threshold {
+                    return Err(RecoveryError::NotEnoughGuardians.into());
+                }
 
                 // Deserialize into WalletHeader from wallet program data
                 let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
@@ -259,7 +262,9 @@ impl Processor {
                     let guardian_pk = guardian_info.key;
 
                     // check if the key to be deleted is in the data
-                    assert!(initial_data.guardians.contains(guardian_pk), "the guardian to be replaced is not in the data");
+                    if !initial_data.guardians.contains(guardian_pk) {
+                        return Err(RecoveryError::DeletedGuardianNotFound.into());
+                    }
 
                     // get index of guardian key to be deleted in the data
                     let index = initial_data.guardians.iter().position(|&k| k == *guardian_pk).unwrap();
@@ -283,7 +288,7 @@ impl Processor {
 
                 Ok(())
             }
-            EchoInstruction::ModifyRecoveryThreshold { 
+            RecoveryInstruction::ModifyRecoveryThreshold { 
                 new_threshold 
             } => {
                 msg!("Instruction: ModifyRecoveryThreshold");
@@ -306,7 +311,9 @@ impl Processor {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
-                assert!(new_threshold <= 10 && new_threshold > 0, "Threshold must be between 1 and 10");
+                if new_threshold > 10 || new_threshold <= 0 {
+                    return Err(RecoveryError::InvalidRecoveryThreshold.into());
+                }
 
                 // Add the guardian data into wallet program data
                 let wallet_data = &mut wallet_info.try_borrow_mut_data()?;

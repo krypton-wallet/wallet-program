@@ -28,14 +28,14 @@ const main = async () => {
   const recovery_threshold = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
   const usdc_pk = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
-  const guard1 = new Keypair();
-  const guard2 = new Keypair();
-  const guard3 = new Keypair();
-
   let wallet_pda = await PublicKey.findProgramAddress(
     [Buffer.from('bucket', 'utf-8'), feePayer.publicKey.toBuffer(), usdc_pk.toBuffer()],
     programId
   );
+
+  const guard1 = new Keypair();
+  const guard2 = new Keypair();
+  const guard3 = new Keypair();
 
   let initializeSocialWalletIx = new TransactionInstruction({
     keys: [
@@ -79,15 +79,10 @@ const main = async () => {
   const guard4 = new Keypair();
   const new_acct_len = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
 
-  let wallet_pda1 = await PublicKey.findProgramAddress(
-    [Buffer.from('bucket', 'utf-8'), feePayer.publicKey.toBuffer(), usdc_pk.toBuffer()],
-    programId
-  );
-
   let addToRecoveryListIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda1[0],
+        pubkey: wallet_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -111,15 +106,10 @@ const main = async () => {
   const replaced = new Keypair();
   const new_acct_len1 = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
 
-  let wallet_pda2 = await PublicKey.findProgramAddress(
-    [Buffer.from('bucket', 'utf-8'), feePayer.publicKey.toBuffer(), usdc_pk.toBuffer()],
-    programId
-  );
-
   let modifyRecoveryIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda2[0],
+        pubkey: wallet_pda[0],
         isSigner: false,
         isWritable: true,
       },

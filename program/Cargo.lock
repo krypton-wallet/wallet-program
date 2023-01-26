@@ -1139,23 +1139,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abe71d579d1812060163dff96056261deb5bf6729b100fa2e36a68b9649ba3d3"
 
 [[package]]
-name = "echo"
-version = "0.1.0"
-dependencies = [
- "assert_matches",
- "borsh",
- "bytemuck",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "solana-validator",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "ed25519"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3471,6 +3454,23 @@ dependencies = [
  "ring",
  "time 0.3.17",
  "yasna",
+]
+
+[[package]]
+name = "recovery"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "borsh",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-validator",
+ "spl-token",
+ "thiserror",
 ]
 
 [[package]]

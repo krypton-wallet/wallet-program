@@ -1,13 +1,13 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
-pub enum EchoInstruction {
+pub enum RecoveryInstruction {
     /// This instruction will allow a user to initialize a socially-recoverable program wallet
     ///
     /// Accounts:
     /// | index | writable | signer | description                                                              |
     /// |-------|----------|--------|--------------------------------------------------------------------------|
-    /// | 0     | ✅       | ❌     | authorized_buffer: PDA of Echo Program that only `authority` can write to |
+    /// | 0     | ✅       | ❌     | authorized_buffer: PDA of Recovery Program that only `authority` can write to |
     /// | 1     | ❌       | ✅     | authority: Pubkey with sole write access to `authorized_buffer`           |
     /// | 2     | ❌       | ❌     | system_program: Used to allocate the buffer                               |
     InitializeSocialWallet {
@@ -28,7 +28,7 @@ pub enum EchoInstruction {
     /// Accounts:
     /// | index | writable | signer | description                                                              |
     /// |-------|----------|--------|--------------------------------------------------------------------------|
-    /// | 0     | ✅       | ❌     | authorized_buffer: PDA of Echo Program that only `authority` can write to |
+    /// | 0     | ✅       | ❌     | authorized_buffer: PDA of Recovery Program that only `authority` can write to |
     /// | 1     | ❌       | ✅     | authority: Pubkey with sole write access to `authorized_buffer`           |
     AddToRecoveryList {
         acct_len: u8,
