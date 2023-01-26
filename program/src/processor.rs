@@ -283,16 +283,36 @@ impl Processor {
 
                 Ok(())
             }
-            EchoInstruction::InitializeVendingMachineEcho {
-                price: _,
-                buffer_size: _,
+            EchoInstruction::ModifyRecoveryThreshold { 
+                new_threshold 
             } => {
-                msg!("Instruction: InitializeVendingMachineEcho");
-                Err(EchoError::NotImplemented.into())
-            }
-            EchoInstruction::VendingMachineEcho { data: _ } => {
-                msg!("Instruction: VendingMachineEcho");
-                Err(EchoError::NotImplemented.into())
+                msg!("Instruction: ModifyRecoveryThreshold");
+
+                let wallet_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+
+                // find pda of wallet program that corresponds to usdc bucket for given authority
+                let (wallet_pda, _) = Pubkey::find_program_address(
+                    &[
+                        b"bucket",
+                        authority_info.key.as_ref(),
+                        // usdc mint public key
+                        usdc_pk.as_ref(),
+                    ],
+                    program_id,
+                );
+
+                if wallet_pda != *wallet_info.key {
+                    return Err(ProgramError::InvalidSeeds)
+                }
+
+                assert!(new_threshold <= 10 && new_threshold > 0, "Threshold must be between 1 and 10");
+
+                // Add the guardian data into wallet program data
+                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
+                wallet_data[0] = new_threshold;
+
+                Ok(())
             }
         }
     }

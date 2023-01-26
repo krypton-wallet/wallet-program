@@ -169,8 +169,29 @@ const main = async () => {
     data: Buffer.concat([idx3, new_acct_len2]),
   })
 
+  // Instr 5 (2.4) Modify threshold
+  const idx4 = Buffer.from(new Uint8Array([4]));
+  const new_threshold = Buffer.from(new Uint8Array((new BN(5)).toArray("le", 1)));
+
+  let modifyRecoveryThresholdIx = new TransactionInstruction({
+    keys: [
+      {
+        pubkey: wallet_pda[0],
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: feePayer.publicKey,
+        isSigner: true,
+        isWritable: true,
+      },
+    ],
+    programId: programId,
+    data: Buffer.concat([idx4, new_threshold]),
+  })
+
   let tx = new Transaction();
-  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx);
+  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx).add(modifyRecoveryThresholdIx);
 
   let txid = await sendAndConfirmTransaction(
     connection,
