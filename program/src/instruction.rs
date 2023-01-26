@@ -36,6 +36,9 @@ pub enum EchoInstruction {
     ModifyRecoveryList {
         acct_len: u8,
     },
+    DeleteFromRecoveryList {
+        acct_len: u8,
+    },
     /// This instruction will allocate `buffer_size` bytes to the `vending_machine_buffer` account and assign it the Echo Program.
     ///
     /// The first 9 bytes of `vending_machine_buffer` will be set with the following data:

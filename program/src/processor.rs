@@ -218,6 +218,71 @@ impl Processor {
 
                 Ok(())
             }
+            EchoInstruction::DeleteFromRecoveryList {
+                acct_len,
+            } => {
+                msg!("Instruction: DeleteFromRecoveryList");
+
+                let wallet_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+
+                // find pda of wallet program that corresponds to usdc bucket for given authority
+                let (wallet_pda, _) = Pubkey::find_program_address(
+                    &[
+                        b"bucket",
+                        authority_info.key.as_ref(),
+                        // usdc mint public key
+                        usdc_pk.as_ref(),
+                    ],
+                    program_id,
+                );
+
+                if wallet_pda != *wallet_info.key {
+                    return Err(ProgramError::InvalidSeeds)
+                }
+
+                // Add the guardian data into wallet program data
+                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
+                let old_acct_len = wallet_data[1];
+                let recovery_threshold = wallet_data[0];
+                let old_data_len = (old_acct_len * 32 + 5) as usize;
+
+                // assert that total number of guardians are greater than or equal to the recovery threshold
+                assert!(old_acct_len - acct_len >= recovery_threshold, "too many guardians deleted");
+
+                // Deserialize into WalletHeader from wallet program data
+                let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
+
+                // Add new guardian into deserialized struct
+                for _ in 0..acct_len {
+                    let guardian_info = next_account_info(account_info_iter)?;
+                    let guardian_pk = guardian_info.key;
+
+                    // check if the key to be deleted is in the data
+                    assert!(initial_data.guardians.contains(guardian_pk), "the guardian to be replaced is not in the data");
+
+                    // get index of guardian key to be deleted in the data
+                    let index = initial_data.guardians.iter().position(|&k| k == *guardian_pk).unwrap();
+
+                    // replace old with new key in the index of old key
+                    initial_data.guardians.remove(index);
+                    msg!("deleted guardian {:?}", guardian_pk.to_bytes());
+                }
+
+                // print all guardians
+                for i in 0..initial_data.guardians.len() {
+                    msg!("Guardian {}: {:?}", i, initial_data.guardians[i].to_bytes());
+                }
+
+                // Serialize struct (after adding guardians) into wallet program data
+                let initial_data_len = initial_data.try_to_vec()?.len();
+                msg!("data len: {}", initial_data_len);
+                msg!("Serializing...");
+                let mut writer = &mut wallet_data[..initial_data_len];
+                initial_data.serialize(&mut writer)?;
+
+                Ok(())
+            }
             EchoInstruction::InitializeVendingMachineEcho {
                 price: _,
                 buffer_size: _,

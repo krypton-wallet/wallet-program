@@ -143,8 +143,34 @@ const main = async () => {
     data: Buffer.concat([idx2, new_acct_len1]),
   })
 
+  // Instr 4 (2.3) Delete
+  const idx3 = Buffer.from(new Uint8Array([3]));
+  const new_acct_len2 = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
+
+  let deleteFromRecoveryIx = new TransactionInstruction({
+    keys: [
+      {
+        pubkey: wallet_pda[0],
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: feePayer.publicKey,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: guard1.publicKey,
+        isSigner: false,
+        isWritable: false,
+      },
+    ],
+    programId: programId,
+    data: Buffer.concat([idx3, new_acct_len2]),
+  })
+
   let tx = new Transaction();
-  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx);
+  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx);
 
   let txid = await sendAndConfirmTransaction(
     connection,
