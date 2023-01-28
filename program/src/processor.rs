@@ -10,7 +10,7 @@ use solana_program::{
     rent::Rent, sysvar::Sysvar, 
 };
 
-use crate::{error::RecoveryError, state::WalletHeader};
+use crate::{error::RecoveryError, state::ProfileHeader};
 use crate::instruction::RecoveryInstruction;
 
 pub struct Processor {}
@@ -26,7 +26,7 @@ impl Processor {
 
         let account_info_iter = &mut accounts.iter();
         let usdc_pk_str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-        let usdc_pk = Pubkey::from_str(usdc_pk_str).unwrap();
+        let _usdc_pk = Pubkey::from_str(usdc_pk_str).unwrap();
 
         match instruction {
             RecoveryInstruction::InitializeSocialWallet {
@@ -35,7 +35,7 @@ impl Processor {
             } => {
                 msg!("Instruction: InitializeSocialWallet");
                 
-                let wallet_info = next_account_info(account_info_iter)?;
+                let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
                 let system_program_info = next_account_info(account_info_iter)?;
 
@@ -46,88 +46,120 @@ impl Processor {
                     guardians.push(*guardian_account_info.key);
                 }
 
-                // find pda of wallet program that corresponds to usdc bucket for given authority
-                let (wallet_pda, bump_seed) = Pubkey::find_program_address(
+                // allocate space for 10 recovery accounts (guardian) in profile account data
+                let data_len = (5 + 32 * 10) as u64;
+                msg!("Number of bytes of data: {}", data_len);
+
+                // find pda of profile account for given authority
+                let (profile_pda, profile_bump_seed) = Pubkey::find_program_address(
                     &[
-                        b"bucket",
+                        b"profile",
                         authority_info.key.as_ref(),
-                        // usdc mint public key
-                        usdc_pk.as_ref(),
                     ],
                     program_id,
                 );
 
-                if wallet_pda != *wallet_info.key {
+                if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
-                // allocate space for 10 recovery accounts (guardian) in program data
-                let data_len = (5 + 32 * 10) as u64;
-                msg!("Number of bytes of data: {}", data_len);
-
-                // create bucket account
-                let create_account_instruction = create_account(
+                // create profile account
+                let create_profile_account_instruction = create_account(
                     authority_info.key, 
-                    &wallet_pda, 
+                    &profile_pda, 
                     Rent::get()?.minimum_balance( data_len as usize), 
                     data_len.into(),
                     program_id
                 );
 
-                // Invoke CPI to create USDC bucket in wallet program and sign it with seed of wallet
+                // Invoke CPI to create profile account
                 invoke_signed(
-                    &create_account_instruction, 
+                    &create_profile_account_instruction, 
                     &[
-                        wallet_info.clone(),
+                        profile_info.clone(),
                         authority_info.clone(),
                         system_program_info.clone(),
                     ],
                     &[
                         &[
-                            b"bucket", 
+                            b"profile", 
                             authority_info.key.as_ref(), 
-                            usdc_pk.as_ref(),
-                            &[bump_seed]
+                            &[profile_bump_seed]
                         ]
                     ],
                 )?;
 
-                // Create WalletHeader and Serialize using borsh
-                let initial_data = WalletHeader{
+                // // find pda of bucket account for given token + authority
+                // let (bucket_pda, bucket_bump_seed) = Pubkey::find_program_address(
+                //     &[
+                //         b"bucket",
+                //         authority_info.key.as_ref(),
+                //         // usdc mint public key
+                //         usdc_pk.as_ref(),
+                //     ],
+                //     program_id,
+                // );
+
+                // // create bucket account
+                // let create_bucket_account_instruction = create_account(
+                //     authority_info.key, 
+                //     &bucket_pda, 
+                //     Rent::get()?.minimum_balance(4), 
+                //     4,
+                //     program_id
+                // );
+
+                // // Invoke CPI to create USDC bucket in wallet program and sign it with seed of wallet
+                // invoke_signed(
+                //     &create_bucket_account_instruction, 
+                //     &[
+                //         authority_info.clone(),
+                //         system_program_info.clone(),
+                //     ],
+                //     &[
+                //         &[
+                //             b"bucket", 
+                //             authority_info.key.as_ref(), 
+                //             usdc_pk.as_ref(),
+                //             &[bucket_bump_seed]
+                //         ]
+                //     ],
+                // )?;
+
+                // Create ProfileHeader and Serialize using borsh
+                let initial_data = ProfileHeader{
                     recovery_threshold,
                     guardians,
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
                 msg!("Serializing...");
-                initial_data.serialize(&mut &mut wallet_info.try_borrow_mut_data()?[..initial_data_len])?;
+                initial_data.serialize(&mut &mut profile_info.try_borrow_mut_data()?[..initial_data_len])?;
 
                 Ok(())
             }
             RecoveryInstruction::AddToRecoveryList { acct_len } => {
                 msg!("Instruction: AddToRecovery");
 
-                let wallet_info = next_account_info(account_info_iter)?;
+                let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
 
-                // find pda of wallet program that corresponds to usdc bucket for given authority
-                let (wallet_pda, _) = Pubkey::find_program_address(
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
                     &[
-                        b"bucket",
+                        b"profile",
                         authority_info.key.as_ref(),
-                        // usdc mint public key
-                        usdc_pk.as_ref(),
                     ],
                     program_id,
                 );
 
-                if wallet_pda != *wallet_info.key {
+                if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
-                // Add the guardian data into wallet program data
-                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
-                let old_acct_len = wallet_data[1];
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                let old_acct_len = profile_data[1];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
                 // assert that total number of guardians are less than or equal to 10
@@ -135,8 +167,8 @@ impl Processor {
                     return Err(RecoveryError::TooManyGuardians.into());
                 }
 
-                // Deserialize into WalletHeader from wallet program data
-                let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
+                // Deserialize into ProfileHeader from profile program data
+                let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
                 // Add new guardian into deserialized struct
                 for i in 0..acct_len {
@@ -145,11 +177,11 @@ impl Processor {
                     initial_data.guardians.push(*guardian_account_info.key);
                 }
 
-                // Serialize struct (after adding guardians) into wallet program data
+                // Serialize struct (after adding guardians) into profile program data
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
                 msg!("Serializing...");
-                let mut writer = &mut wallet_data[..initial_data_len];
+                let mut writer = &mut profile_data[..initial_data_len];
                 initial_data.serialize(&mut writer)?;
 
                 Ok(())
@@ -159,31 +191,29 @@ impl Processor {
             } => {
                 msg!("Instruction: ModifyRecoveryList");
 
-                let wallet_info = next_account_info(account_info_iter)?;
+                let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
 
-                // find pda of wallet program that corresponds to usdc bucket for given authority
-                let (wallet_pda, _) = Pubkey::find_program_address(
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
                     &[
-                        b"bucket",
+                        b"profile",
                         authority_info.key.as_ref(),
-                        // usdc mint public key
-                        usdc_pk.as_ref(),
                     ],
                     program_id,
                 );
 
-                if wallet_pda != *wallet_info.key {
+                if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
-                // Add the guardian data into wallet program data
-                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
-                let old_acct_len = wallet_data[1];
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                let old_acct_len = profile_data[1];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
-                // Deserialize into WalletHeader from wallet program data
-                let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
+                // Deserialize into ProfileHeader from profile program data
+                let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
                 // Add new guardian into deserialized struct
                 for _ in 0..acct_len {
@@ -210,11 +240,11 @@ impl Processor {
                     msg!("Guardian {}: {:?}", i, initial_data.guardians[i].to_bytes());
                 }
 
-                // Serialize struct (after adding guardians) into wallet program data
+                // Serialize struct (after adding guardians) into profile program data
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
                 msg!("Serializing...");
-                let mut writer = &mut wallet_data[..initial_data_len];
+                let mut writer = &mut profile_data[..initial_data_len];
                 initial_data.serialize(&mut writer)?;
 
                 Ok(())
@@ -224,28 +254,26 @@ impl Processor {
             } => {
                 msg!("Instruction: DeleteFromRecoveryList");
 
-                let wallet_info = next_account_info(account_info_iter)?;
+                let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
 
-                // find pda of wallet program that corresponds to usdc bucket for given authority
-                let (wallet_pda, _) = Pubkey::find_program_address(
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
                     &[
-                        b"bucket",
+                        b"profile",
                         authority_info.key.as_ref(),
-                        // usdc mint public key
-                        usdc_pk.as_ref(),
                     ],
                     program_id,
                 );
 
-                if wallet_pda != *wallet_info.key {
+                if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
-                // Add the guardian data into wallet program data
-                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
-                let old_acct_len = wallet_data[1];
-                let recovery_threshold = wallet_data[0];
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                let old_acct_len = profile_data[1];
+                let recovery_threshold = profile_data[0];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
                 // assert that total number of guardians are greater than or equal to the recovery threshold
@@ -253,8 +281,8 @@ impl Processor {
                     return Err(RecoveryError::NotEnoughGuardians.into());
                 }
 
-                // Deserialize into WalletHeader from wallet program data
-                let mut initial_data = WalletHeader::try_from_slice(&wallet_data[..old_data_len])?;
+                // Deserialize into ProfileHeader from profile program data
+                let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
                 // Add new guardian into deserialized struct
                 for _ in 0..acct_len {
@@ -279,11 +307,11 @@ impl Processor {
                     msg!("Guardian {}: {:?}", i, initial_data.guardians[i].to_bytes());
                 }
 
-                // Serialize struct (after adding guardians) into wallet program data
+                // Serialize struct (after adding guardians) into profile program data
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
                 msg!("Serializing...");
-                let mut writer = &mut wallet_data[..initial_data_len];
+                let mut writer = &mut profile_data[..initial_data_len];
                 initial_data.serialize(&mut writer)?;
 
                 Ok(())
@@ -293,21 +321,19 @@ impl Processor {
             } => {
                 msg!("Instruction: ModifyRecoveryThreshold");
 
-                let wallet_info = next_account_info(account_info_iter)?;
+                let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
 
-                // find pda of wallet program that corresponds to usdc bucket for given authority
-                let (wallet_pda, _) = Pubkey::find_program_address(
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
                     &[
-                        b"bucket",
+                        b"profile",
                         authority_info.key.as_ref(),
-                        // usdc mint public key
-                        usdc_pk.as_ref(),
                     ],
                     program_id,
                 );
 
-                if wallet_pda != *wallet_info.key {
+                if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
@@ -315,10 +341,131 @@ impl Processor {
                     return Err(RecoveryError::InvalidRecoveryThreshold.into());
                 }
 
-                // Add the guardian data into wallet program data
-                let wallet_data = &mut wallet_info.try_borrow_mut_data()?;
-                wallet_data[0] = new_threshold;
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                profile_data[0] = new_threshold;
 
+                Ok(())
+            }
+            RecoveryInstruction::RecoverWallet{
+                acct_len,
+            } => {
+                msg!("Instruction: RecoverWallet");
+
+                let profile_info = next_account_info(account_info_iter)?;
+                let new_profile_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+                let system_program_info = next_account_info(account_info_iter)?;
+                let new_authority_info = next_account_info(account_info_iter)?;
+
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
+                    &[
+                        b"profile",
+                        authority_info.key.as_ref(),
+                    ],
+                    program_id,
+                );
+
+                if profile_pda != *profile_info.key {
+                    return Err(ProgramError::InvalidSeeds)
+                }
+
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                let recovery_threshold = profile_data[0];
+                let old_acct_len = profile_data[1];
+                let old_data_len = (old_acct_len * 32 + 5) as usize;
+
+                if recovery_threshold > acct_len {
+                    return Err(RecoveryError::NotEnoughGuardiansToRecover.into());
+                }
+
+                // Deserialize into ProfileHeader from profile program data
+                let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
+                let mut guardians = Vec::with_capacity(acct_len.into());
+                let mut guardian_infos = Vec::with_capacity(acct_len.into());
+
+                for _ in 0..acct_len {
+                    let guardian_info = next_account_info(account_info_iter)?;
+                    let guardian_pk = guardian_info.key;
+
+                    // check if the input guardian key is authorized (in profile program data)
+                    if !initial_data.guardians.contains(guardian_pk) {
+                        return Err(RecoveryError::NotAuthorizedToRecover.into());
+                    }
+                    
+                    guardian_infos.push(guardian_info);
+                    guardians.push(*guardian_pk);
+                }
+
+                msg!("Good until here");
+
+                // allocate space for 10 recovery accounts (guardian) in profile account data
+                let data_len = (5 + 32 * 10) as u64;
+                msg!("Number of bytes of data: {}", data_len);
+
+                // find pda of new profile account for new authority
+                let (new_profile_pda, new_bump_seed) = Pubkey::find_program_address(
+                    &[
+                        b"profile",
+                        new_authority_info.key.as_ref(),
+                    ],
+                    program_id,
+                );
+
+                // let new_profile_pda = Pubkey::create_program_address(
+                //     &[
+                //         b"profile", 
+                //         new_authority_info.key.as_ref(), 
+                //     ], program_id)?;
+
+                msg!("found new pda: {}", new_profile_pda);
+
+                // create a new profile account
+                let create_profile_account_instruction = create_account(
+                    new_authority_info.key, 
+                    &new_profile_pda, 
+                    Rent::get()?.minimum_balance( data_len as usize), 
+                    data_len.into(),
+                    program_id
+                );
+                msg!("Just before invoking");
+                
+                let mut account_infos = vec![
+                    new_profile_info.clone(),
+                    new_authority_info.clone(),
+                    system_program_info.clone(),
+                ];
+
+                for i in 0..acct_len {
+                    account_infos.push(guardian_infos[i as usize].clone());
+                }
+
+                // Invoke CPI to create profile account
+                invoke_signed(
+                    &create_profile_account_instruction, 
+                    &account_infos,
+                    &[
+                        &[
+                            b"profile", 
+                            new_authority_info.key.as_ref(), 
+                            &[new_bump_seed]
+                        ]
+                    ],
+                )?;
+
+                // Create ProfileHeader and Serialize using borsh
+                let initial_data = ProfileHeader{
+                    recovery_threshold,
+                    guardians,
+                };
+                let initial_data_len = initial_data.try_to_vec()?.len();
+                msg!("data len: {}", initial_data_len);
+                msg!("Serializing...");
+                initial_data.serialize(&mut &mut new_profile_info.try_borrow_mut_data()?[..initial_data_len])?;
+
+                
                 Ok(())
             }
         }

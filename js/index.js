@@ -26,10 +26,10 @@ const main = async () => {
   const idx = Buffer.from(new Uint8Array([0]));
   const acct_len = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
   const recovery_threshold = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
-  const usdc_pk = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+  //const usdc_pk = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
-  let wallet_pda = await PublicKey.findProgramAddress(
-    [Buffer.from('bucket', 'utf-8'), feePayer.publicKey.toBuffer(), usdc_pk.toBuffer()],
+  let profile_pda = await PublicKey.findProgramAddress(
+    [Buffer.from('profile', 'utf-8'), feePayer.publicKey.toBuffer()],
     programId
   );
 
@@ -40,7 +40,7 @@ const main = async () => {
   let initializeSocialWalletIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda[0],
+        pubkey: profile_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -82,7 +82,7 @@ const main = async () => {
   let addToRecoveryListIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda[0],
+        pubkey: profile_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -109,7 +109,7 @@ const main = async () => {
   let modifyRecoveryIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda[0],
+        pubkey: profile_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -140,7 +140,7 @@ const main = async () => {
   let deleteFromRecoveryIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda[0],
+        pubkey: profile_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -161,12 +161,12 @@ const main = async () => {
 
   // Instr 5 (2.4) Modify threshold
   const idx4 = Buffer.from(new Uint8Array([4]));
-  const new_threshold = Buffer.from(new Uint8Array((new BN(5)).toArray("le", 1)));
+  const new_threshold = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
 
   let modifyRecoveryThresholdIx = new TransactionInstruction({
     keys: [
       {
-        pubkey: wallet_pda[0],
+        pubkey: profile_pda[0],
         isSigner: false,
         isWritable: true,
       },
@@ -180,13 +180,74 @@ const main = async () => {
     data: Buffer.concat([idx4, new_threshold]),
   })
 
+  // Instr 6 (3) recover wallet
+  const idx5 = Buffer.from(new Uint8Array([5]));
+  const new_acct_len3 = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
+  const newFeePayer = new Keypair();
+
+  console.log("Requesting Airdrop of 1 SOL to new fee payer...");
+  await connection.requestAirdrop(newFeePayer.publicKey, 2e9);
+  console.log("Airdrop received");
+
+  let new_profile_pda = await PublicKey.findProgramAddress(
+    [Buffer.from('profile', 'utf-8'), newFeePayer.publicKey.toBuffer()],
+    programId
+  );
+
+  let recoverWalletIx = new TransactionInstruction({
+    keys: [
+      {
+        pubkey: profile_pda[0],
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: new_profile_pda[0],
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: feePayer.publicKey,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: SystemProgram.programId,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: newFeePayer.publicKey,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: guard2.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+      {
+        pubkey: replaced.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+      {
+        pubkey: guard4.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+    ],
+    programId: programId,
+    data: Buffer.concat([idx5, new_acct_len3]),
+  })
+
   let tx = new Transaction();
-  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx).add(modifyRecoveryThresholdIx);
+  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx).add(modifyRecoveryThresholdIx).add(recoverWalletIx);
 
   let txid = await sendAndConfirmTransaction(
     connection,
     tx,
-    [feePayer],
+    [feePayer, guard2, replaced, guard4, newFeePayer],
     {
       skipPreflight: true,
       preflightCommitment: "confirmed",
@@ -195,7 +256,7 @@ const main = async () => {
   );
   console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
 
-  data = (await connection.getAccountInfo(wallet_pda[0])).data;
+  data = (await connection.getAccountInfo(profile_pda[0])).data;
   console.log("Wallet Buffer Text:", data.toString());
 };
 

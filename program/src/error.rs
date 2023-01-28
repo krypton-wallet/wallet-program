@@ -14,6 +14,10 @@ pub enum RecoveryError {
     DeletedGuardianNotFound,
     #[error("Recovery Threshold must be between 1 to 10")]
     InvalidRecoveryThreshold,
+    #[error("There are too few guardians to recover")]
+    NotEnoughGuardiansToRecover,
+    #[error("The pubkey is not authorized to recover the wallet")]
+    NotAuthorizedToRecover,
 }
 
 impl From<RecoveryError> for ProgramError {

@@ -41,5 +41,8 @@ pub enum RecoveryInstruction {
     },
     ModifyRecoveryThreshold {
         new_threshold: u8,
-    }
+    },
+    RecoverWallet {
+        acct_len: u8,
+    },
 }
