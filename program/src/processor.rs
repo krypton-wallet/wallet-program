@@ -378,7 +378,6 @@ impl Processor {
 
                 // Deserialize into ProfileHeader from profile program data
                 let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
-                let mut guardians = Vec::with_capacity(acct_len.into());
                 let mut guardian_infos = Vec::with_capacity(acct_len.into());
 
                 for _ in 0..acct_len {
@@ -389,10 +388,10 @@ impl Processor {
                     if !initial_data.guardians.contains(guardian_pk) {
                         return Err(RecoveryError::NotAuthorizedToRecover.into());
                     }
-                    
                     guardian_infos.push(guardian_info);
-                    guardians.push(*guardian_pk);
                 }
+
+                let guardians = initial_data.guardians.clone();
 
                 // allocate space for 10 recovery accounts (guardian) in profile account data
                 let data_len = (5 + 32 * 10) as u64;
