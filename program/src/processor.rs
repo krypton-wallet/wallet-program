@@ -89,43 +89,6 @@ impl Processor {
                     ],
                 )?;
 
-                // // find pda of bucket account for given token + authority
-                // let (bucket_pda, bucket_bump_seed) = Pubkey::find_program_address(
-                //     &[
-                //         b"bucket",
-                //         authority_info.key.as_ref(),
-                //         // usdc mint public key
-                //         usdc_pk.as_ref(),
-                //     ],
-                //     program_id,
-                // );
-
-                // // create bucket account
-                // let create_bucket_account_instruction = create_account(
-                //     authority_info.key, 
-                //     &bucket_pda, 
-                //     Rent::get()?.minimum_balance(4), 
-                //     4,
-                //     program_id
-                // );
-
-                // // Invoke CPI to create USDC bucket in wallet program and sign it with seed of wallet
-                // invoke_signed(
-                //     &create_bucket_account_instruction, 
-                //     &[
-                //         authority_info.clone(),
-                //         system_program_info.clone(),
-                //     ],
-                //     &[
-                //         &[
-                //             b"bucket", 
-                //             authority_info.key.as_ref(), 
-                //             usdc_pk.as_ref(),
-                //             &[bucket_bump_seed]
-                //         ]
-                //     ],
-                // )?;
-
                 // Create ProfileHeader and Serialize using borsh
                 let initial_data = ProfileHeader{
                     recovery_threshold,
@@ -170,11 +133,23 @@ impl Processor {
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
+                // Log existing guardians
+                msg!("Old Guardian List: ");
+                for i in 0..old_acct_len {
+                    msg!("{}: {:x?}", i, initial_data.guardians[i as usize].to_bytes());
+                }
+
                 // Add new guardian into deserialized struct
                 for i in 0..acct_len {
                     let guardian_account_info = next_account_info(account_info_iter)?;
-                    msg!("newly added guardian {}: {:?}", i, guardian_account_info.key.to_bytes());
+                    msg!("newly added guardian {}: {:x?}", i, guardian_account_info.key.to_bytes());
                     initial_data.guardians.push(*guardian_account_info.key);
+                }
+
+                // Log new guardians after add
+                msg!("New Guardian List: ");
+                for i in 0..old_acct_len+acct_len {
+                    msg!("{}: {:x?}", i, initial_data.guardians[i as usize].to_bytes());
                 }
 
                 // Serialize struct (after adding guardians) into profile program data
@@ -215,6 +190,12 @@ impl Processor {
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
+                // Log existing guardians
+                msg!("Old Guardian List: ");
+                for i in 0..old_acct_len {
+                    msg!("{}: {:x?}", i, initial_data.guardians[i as usize].to_bytes());
+                }
+
                 // Add new guardian into deserialized struct
                 for _ in 0..acct_len {
                     let old_guardian_info = next_account_info(account_info_iter)?;
@@ -232,12 +213,13 @@ impl Processor {
 
                     // replace old with new key in the index of old key
                     initial_data.guardians[index] = *new_guardian_pk;
-                    msg!("replace old {:?} with new {:?}", old_guardian_pk.to_bytes(), new_guardian_pk.to_bytes());
+                    msg!("replace old {:x?} with new {:x?}", old_guardian_pk.to_bytes(), new_guardian_pk.to_bytes());
                 }
 
                 // print all guardians
+                msg!("New Guardian List: ");
                 for i in 0..initial_data.guardians.len() {
-                    msg!("Guardian {}: {:?}", i, initial_data.guardians[i].to_bytes());
+                    msg!("{}: {:x?}", i, initial_data.guardians[i].to_bytes());
                 }
 
                 // Serialize struct (after adding guardians) into profile program data
@@ -276,6 +258,10 @@ impl Processor {
                 let recovery_threshold = profile_data[0];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
+                msg!("old acct len: {}", old_acct_len);
+                msg!("acct_len: {}", acct_len);
+                msg!("recover thres: {}", recovery_threshold);
+
                 // assert that total number of guardians are greater than or equal to the recovery threshold
                 if old_acct_len - acct_len < recovery_threshold {
                     return Err(RecoveryError::NotEnoughGuardians.into());
@@ -284,7 +270,13 @@ impl Processor {
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
-                // Add new guardian into deserialized struct
+                // print all old guardians
+                msg!("Old Guardian List: ");
+                for i in 0..initial_data.guardians.len() {
+                    msg!("{}: {:x?}", i, initial_data.guardians[i].to_bytes());
+                }
+
+                // Delete guardian from deserialized struct
                 for _ in 0..acct_len {
                     let guardian_info = next_account_info(account_info_iter)?;
                     let guardian_pk = guardian_info.key;
@@ -299,12 +291,13 @@ impl Processor {
 
                     // replace old with new key in the index of old key
                     initial_data.guardians.remove(index);
-                    msg!("deleted guardian {:?}", guardian_pk.to_bytes());
+                    msg!("deleted guardian {:x?}", guardian_pk.to_bytes());
                 }
 
                 // print all guardians
+                msg!("New Guardian List: ");
                 for i in 0..initial_data.guardians.len() {
-                    msg!("Guardian {}: {:?}", i, initial_data.guardians[i].to_bytes());
+                    msg!("{}: {:x?}", i, initial_data.guardians[i].to_bytes());
                 }
 
                 // Serialize struct (after adding guardians) into profile program data
@@ -371,6 +364,8 @@ impl Processor {
                     return Err(ProgramError::InvalidSeeds)
                 }
 
+                msg!("Old Profile PDA: {}", profile_pda);
+
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let recovery_threshold = profile_data[0];
@@ -399,11 +394,8 @@ impl Processor {
                     guardians.push(*guardian_pk);
                 }
 
-                msg!("Good until here");
-
                 // allocate space for 10 recovery accounts (guardian) in profile account data
                 let data_len = (5 + 32 * 10) as u64;
-                msg!("Number of bytes of data: {}", data_len);
 
                 // find pda of new profile account for new authority
                 let (new_profile_pda, new_bump_seed) = Pubkey::find_program_address(
@@ -413,14 +405,7 @@ impl Processor {
                     ],
                     program_id,
                 );
-
-                // let new_profile_pda = Pubkey::create_program_address(
-                //     &[
-                //         b"profile", 
-                //         new_authority_info.key.as_ref(), 
-                //     ], program_id)?;
-
-                msg!("found new pda: {}", new_profile_pda);
+                msg!("New Profile PDA: {}", new_profile_pda);
 
                 // create a new profile account
                 let create_profile_account_instruction = create_account(
@@ -430,7 +415,6 @@ impl Processor {
                     data_len.into(),
                     program_id
                 );
-                msg!("Just before invoking");
                 
                 let mut account_infos = vec![
                     new_profile_info.clone(),
