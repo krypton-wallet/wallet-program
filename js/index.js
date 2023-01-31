@@ -24,12 +24,14 @@ const main = async () => {
 
   // instr 1: initialize social recovery wallet
   const idx = Buffer.from(new Uint8Array([0]));
-  const acct_len = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
-  const recovery_threshold = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
+  const acct_len = Buffer.from(new Uint8Array(new BN(3).toArray("le", 1)));
+  const recovery_threshold = Buffer.from(
+    new Uint8Array(new BN(3).toArray("le", 1))
+  );
   //const usdc_pk = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
   let profile_pda = await PublicKey.findProgramAddress(
-    [Buffer.from('profile', 'utf-8'), feePayer.publicKey.toBuffer()],
+    [Buffer.from("profile", "utf-8"), feePayer.publicKey.toBuffer()],
     programId
   );
 
@@ -72,12 +74,12 @@ const main = async () => {
     ],
     programId: programId,
     data: Buffer.concat([idx, acct_len, recovery_threshold]),
-  })
+  });
 
   // Instr 2 (2.1) Add
   const idx1 = Buffer.from(new Uint8Array([1]));
   const guard4 = new Keypair();
-  const new_acct_len = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
+  const new_acct_len = Buffer.from(new Uint8Array(new BN(1).toArray("le", 1)));
 
   let addToRecoveryListIx = new TransactionInstruction({
     keys: [
@@ -99,12 +101,12 @@ const main = async () => {
     ],
     programId: programId,
     data: Buffer.concat([idx1, new_acct_len]),
-  })
+  });
 
   // Instr 3 (2.2) Modify
   const idx2 = Buffer.from(new Uint8Array([2]));
   const replaced = new Keypair();
-  const new_acct_len1 = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
+  const new_acct_len1 = Buffer.from(new Uint8Array(new BN(1).toArray("le", 1)));
 
   let modifyRecoveryIx = new TransactionInstruction({
     keys: [
@@ -127,15 +129,15 @@ const main = async () => {
         pubkey: replaced.publicKey,
         isSigner: false,
         isWritable: false,
-      }
+      },
     ],
     programId: programId,
     data: Buffer.concat([idx2, new_acct_len1]),
-  })
+  });
 
   // Instr 4 (2.3) Delete
   const idx3 = Buffer.from(new Uint8Array([3]));
-  const new_acct_len2 = Buffer.from(new Uint8Array((new BN(1)).toArray("le", 1)));
+  const new_acct_len2 = Buffer.from(new Uint8Array(new BN(1).toArray("le", 1)));
 
   let deleteFromRecoveryIx = new TransactionInstruction({
     keys: [
@@ -157,11 +159,11 @@ const main = async () => {
     ],
     programId: programId,
     data: Buffer.concat([idx3, new_acct_len2]),
-  })
+  });
 
   // Instr 5 (2.4) Modify threshold
   const idx4 = Buffer.from(new Uint8Array([4]));
-  const new_threshold = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
+  const new_threshold = Buffer.from(new Uint8Array(new BN(3).toArray("le", 1)));
 
   let modifyRecoveryThresholdIx = new TransactionInstruction({
     keys: [
@@ -178,11 +180,11 @@ const main = async () => {
     ],
     programId: programId,
     data: Buffer.concat([idx4, new_threshold]),
-  })
+  });
 
   // Instr 6 (3) recover wallet
   const idx5 = Buffer.from(new Uint8Array([5]));
-  const new_acct_len3 = Buffer.from(new Uint8Array((new BN(3)).toArray("le", 1)));
+  const new_acct_len3 = Buffer.from(new Uint8Array(new BN(3).toArray("le", 1)));
   const newFeePayer = new Keypair();
 
   console.log("Requesting Airdrop of 1 SOL to new fee payer...");
@@ -190,7 +192,7 @@ const main = async () => {
   console.log("Airdrop received");
 
   let new_profile_pda = await PublicKey.findProgramAddress(
-    [Buffer.from('profile', 'utf-8'), newFeePayer.publicKey.toBuffer()],
+    [Buffer.from("profile", "utf-8"), newFeePayer.publicKey.toBuffer()],
     programId
   );
 
@@ -239,10 +241,15 @@ const main = async () => {
     ],
     programId: programId,
     data: Buffer.concat([idx5, new_acct_len3]),
-  })
+  });
 
   let tx = new Transaction();
-  tx.add(initializeSocialWalletIx).add(addToRecoveryListIx).add(modifyRecoveryIx).add(deleteFromRecoveryIx).add(modifyRecoveryThresholdIx).add(recoverWalletIx);
+  tx.add(initializeSocialWalletIx)
+    .add(addToRecoveryListIx)
+    .add(modifyRecoveryIx)
+    .add(deleteFromRecoveryIx)
+    .add(modifyRecoveryThresholdIx)
+    .add(recoverWalletIx);
 
   let txid = await sendAndConfirmTransaction(
     connection,
@@ -255,9 +262,6 @@ const main = async () => {
     }
   );
   console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
-
-  data = (await connection.getAccountInfo(profile_pda[0])).data;
-  console.log("Wallet Buffer Text:", data.toString());
 };
 
 main()
