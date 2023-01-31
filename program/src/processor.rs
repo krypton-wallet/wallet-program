@@ -3,7 +3,7 @@ use std::{str::FromStr};
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo}, entrypoint::ProgramResult, msg, 
-    program::{invoke_signed},
+    program::invoke_signed,
     program_error::ProgramError,
     system_instruction::create_account,
     pubkey::Pubkey,
@@ -388,6 +388,13 @@ impl Processor {
                     if !initial_data.guardians.contains(guardian_pk) {
                         return Err(RecoveryError::NotAuthorizedToRecover.into());
                     }
+
+                    // check if guardian passed in is a signer
+                    if !guardian_info.is_signer {
+                        return Err(RecoveryError::NotAuthorizedToRecover.into());
+                    }
+
+                    // TODO: add checks for signers
                     guardian_infos.push(guardian_info);
                 }
 
