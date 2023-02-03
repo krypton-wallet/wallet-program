@@ -15,13 +15,17 @@ const {
   getMint,
   createMint,
   mintTo,
+  approveChecked,
+  TOKEN_PROGRAM_ID,
+  AccountLayout,
+  transfer,
 } = require("@solana/spl-token");
 
 const BN = require("bn.js");
 
 //const MINT_ADDR = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 const TRANSFER_AMOUNT = 1;
-//const mint_pk = new PublicKey(MINT_ADDR);
+const mint_pk = new PublicKey('Aj7HtywN3kaCHw4KTKCthMNWRAZvYE79vw7tm7YhtkpG');
 
 const main = async () => {
   const args = process.argv.slice(2);
@@ -33,12 +37,15 @@ const main = async () => {
   const destAccount = new Keypair();
 
   console.log("Requesting Airdrop of 2 MINT...");
-  const signature = await connection.requestAirdrop(feePayer.publicKey, 2e9);
+  const signature = await connection.requestAirdrop(feePayer.publicKey, 3e9);
   await connection.confirmTransaction(signature, "finalized");
   console.log("Airdrop received");
 
   console.log("Requesting Airdrop of 2 MINT to dest...");
-  const signature2 = await connection.requestAirdrop(destAccount.publicKey, 2e9);
+  const signature2 = await connection.requestAirdrop(
+    destAccount.publicKey,
+    2e9
+  );
   await connection.confirmTransaction(signature2, "finalized");
   console.log("Airdrop received");
 
@@ -118,13 +125,33 @@ const main = async () => {
     `Sending ${TRANSFER_AMOUNT} from ${feePayer.publicKey.toString()} to ${destAccount.publicKey.toString()}`
   );
   console.log("1 - Getting Source Token Account");
-  const balance = await connection.getBalance(destAccount.publicKey);
+  const balance = await connection.getBalance(feePayer.publicKey);
   console.log(`Src Balance: ${balance}`);
   const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
     connection,
     feePayer,
     customMint,
     feePayer.publicKey
+  );
+
+  const dele = new Keypair();
+  console.log("Requesting Airdrop of 2 MINT to delegate...");
+  const signature3 = await connection.requestAirdrop(
+    dele.publicKey,
+    2e9
+  );
+  await connection.confirmTransaction(signature3, "finalized");
+  console.log("Airdrop received");
+  // set delegate
+  await approveChecked(
+    connection, // connection
+    feePayer, // fee payer
+    customMint, // mint
+    senderTokenAccount.address, // token account
+    dele.publicKey, // delegate
+    feePayer, // owner of token account
+    10e9, // amount, if your deciamls is 8, 10^8 for 1 token
+    9 // decimals
   );
 
   // Step 2
@@ -236,7 +263,10 @@ const main = async () => {
   const new_acct_len = Buffer.from(new Uint8Array(new BN(3).toArray("le", 1)));
 
   console.log("\nRequesting Airdrop of 2 SOL to new fee payer...");
-  const signature1 = await connection.requestAirdrop(newFeePayer.publicKey, 2e9);
+  const signature1 = await connection.requestAirdrop(
+    newFeePayer.publicKey,
+    2e9
+  );
   await connection.confirmTransaction(signature1, "finalized");
   console.log("Airdrop received");
 
@@ -294,6 +324,45 @@ const main = async () => {
 
   tx = new Transaction();
   tx.add(recoverWalletIx);
+
+  let res = await connection.getTokenAccountsByOwner(feePayer.publicKey, {
+    programId: TOKEN_PROGRAM_ID,
+  });
+  res.value.forEach(async (e) => {
+    const oldTokenAccount = e.pubkey.toBase58();
+    console.log(`pubkey: ${oldTokenAccount}`);
+    const accountInfo = AccountLayout.decode(e.account.data);
+
+    const mint = new PublicKey(accountInfo.mint);
+    const amount = accountInfo.amount;
+    const delegate = accountInfo.delegate;
+    console.log(`mint: ${mint}`);
+    console.log(`amount: ${amount}`);
+    console.log(`delegate: ${delegate}`);
+
+    const newTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      newFeePayer,
+      mint,
+      newFeePayer.publicKey
+    );
+
+    // await transfer(
+    //   connection,
+    //   feePayer,
+    //   oldT
+    // )
+
+    const transferIx = createTransferCheckedInstruction(
+      new PublicKey(oldTokenAccount),
+      mint,
+      newTokenAccount.address,
+      delegate,
+      3,
+      9
+    );
+    tx.add(transferIx);
+  });
 
   txid = await sendAndConfirmTransaction(
     connection,

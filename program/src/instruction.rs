@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum RecoveryInstruction {
@@ -45,4 +46,7 @@ pub enum RecoveryInstruction {
     RecoverWallet {
         acct_len: u8,
     },
+    TransferToNewTokenAccount {
+        amount: u64
+    }
 }
