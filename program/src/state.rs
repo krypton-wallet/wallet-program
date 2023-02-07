@@ -4,10 +4,6 @@ use solana_program::{pubkey::Pubkey};
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct ProfileHeader {
     pub recovery_threshold: u8,
+    pub executor: Pubkey,
     pub guardians: Vec<Pubkey>,
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
-pub struct VendingMachineBufferHeader {
-    // TODO
 }

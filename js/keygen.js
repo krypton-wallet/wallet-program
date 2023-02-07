@@ -59,12 +59,12 @@ const main = async () => {
   console.log("sk: ", g3_sk);
   console.log("\n");
 
-  const dele = new Keypair();
-  const dele_pk = dele.publicKey;
-  const dele_sk = dele.secretKey;
-  console.log("delegate: ");
-  console.log("pk: ", dele_pk);
-  console.log("sk: ", dele_sk);
+  const executor = new Keypair();
+  const executor_pk = executor.publicKey;
+  const executor_sk = executor.secretKey;
+  console.log("executor: ");
+  console.log("pk: ", executor_pk);
+  console.log("sk: ", executor_sk);
 
   const newfeePayer = new Keypair();
   const newfeePayer_pk = newfeePayer.publicKey;
@@ -88,9 +88,9 @@ const main = async () => {
   await connection.confirmTransaction(signature, "finalized");
   console.log("Airdrop received");
 
-  console.log("\nRequesting Airdrop of 2 SOL to delegate...");
+  console.log("\nRequesting Airdrop of 2 SOL to executor...");
   const signature1 = await connection.requestAirdrop(
-    dele.publicKey,
+    executor.publicKey,
     2e9
   );
   await connection.confirmTransaction(signature1, "finalized");
