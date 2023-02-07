@@ -3,7 +3,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
-    program::{invoke, invoke_signed},
+    program::{invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
@@ -328,6 +328,11 @@ impl Processor {
                 msg!("Serializing...");
                 let mut writer = &mut profile_data[..initial_data_len];
                 initial_data.serialize(&mut writer)?;
+
+                // Zero out the deleted space
+                for i in initial_data_len..old_data_len {
+                    profile_data[i] = 0;
+                }
 
                 Ok(())
             }

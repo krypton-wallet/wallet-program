@@ -472,6 +472,16 @@ const main = async () => {
   // recover wallet
   tx = new Transaction();
   tx.add(recoverWalletIx);
+  tx.add(
+    SystemProgram.nonceAuthorize({
+      /** Nonce account */
+      noncePubkey: nonceAccount.publicKey,
+      /** Public key of the current nonce authority */
+      authorizedPubkey: feePayer.publicKey,
+      /** Public key to set as the new nonce authority */
+      newAuthorizedPubkey: newFeePayer.publicKey,
+    })
+  );
 
   console.log("Recover Wallet...");
   let recover_txid = await sendAndConfirmTransaction(

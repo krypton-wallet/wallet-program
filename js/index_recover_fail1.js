@@ -17,6 +17,7 @@ const main = async () => {
   const connection = new Connection('https://api.devnet.solana.com/')
 
   const feePayer = new Keypair()
+  const executor = new Keypair()
 
   console.log('Requesting Airdrop of 1 SOL...')
   await connection.requestAirdrop(feePayer.publicKey, 2e9)
@@ -108,14 +109,19 @@ const main = async () => {
         isWritable: true
       },
       {
+        pubkey: newFeePayer.publicKey,
+        isSigner: true,
+        isWritable: true
+      },
+      {
         pubkey: SystemProgram.programId,
         isSigner: false,
         isWritable: false
       },
       {
-        pubkey: newFeePayer.publicKey,
-        isSigner: true,
-        isWritable: true
+        pubkey: executor.publicKey,
+        isSigner: false,
+        isWritable: false
       },
       {
         pubkey: guard1.publicKey,
