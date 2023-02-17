@@ -359,7 +359,7 @@ const main = async () => {
       },
       {
         pubkey: feePayer.publicKey,
-        isSigner: true,
+        isSigner: false,
         isWritable: true,
       },
       {
@@ -438,7 +438,7 @@ const main = async () => {
         },
         {
           pubkey: feePayer.publicKey,
-          isSigner: true,
+          isSigner: false,
           isWritable: true,
         },
         {
@@ -472,22 +472,22 @@ const main = async () => {
   // recover wallet
   tx = new Transaction();
   tx.add(recoverWalletIx);
-  tx.add(
-    SystemProgram.nonceAuthorize({
-      /** Nonce account */
-      noncePubkey: nonceAccount.publicKey,
-      /** Public key of the current nonce authority */
-      authorizedPubkey: feePayer.publicKey,
-      /** Public key to set as the new nonce authority */
-      newAuthorizedPubkey: newFeePayer.publicKey,
-    })
-  );
+  // tx.add(
+  //   SystemProgram.nonceAuthorize({
+  //     /** Nonce account */
+  //     noncePubkey: nonceAccount.publicKey,
+  //     /** Public key of the current nonce authority */
+  //     authorizedPubkey: feePayer.publicKey,
+  //     /** Public key to set as the new nonce authority */
+  //     newAuthorizedPubkey: newFeePayer.publicKey,
+  //   })
+  // );
 
   console.log("Recover Wallet...");
   let recover_txid = await sendAndConfirmTransaction(
     connection,
     tx,
-    [feePayer, newFeePayer, guard1, guard2, guard3],
+    [newFeePayer, guard1, guard2, guard3],
     {
       skipPreflight: true,
       preflightCommitment: "confirmed",
@@ -503,7 +503,7 @@ const main = async () => {
   txid = await sendAndConfirmTransaction(
     connection,
     transferCloseTx,
-    [feePayer, executor],
+    [executor],
     {
       skipPreflight: true,
       preflightCommitment: "confirmed",
