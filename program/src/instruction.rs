@@ -48,5 +48,5 @@ pub enum RecoveryInstruction {
     TransferToNewTokenAccount {
         amount: u64,
         recovery_mode: u8,
-    }
+    },
 }

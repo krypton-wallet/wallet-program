@@ -373,7 +373,7 @@ impl Processor {
                 let executor_info = next_account_info(account_info_iter)?;
 
                 // check if authorities are signers
-                if !authority_info.is_signer || !new_authority_info.is_signer {
+                if !new_authority_info.is_signer {
                     return Err(ProgramError::InvalidArgument);
                 }
 
@@ -387,7 +387,7 @@ impl Processor {
                 }
                 msg!("Old Profile PDA: {}", profile_pda);
 
-                // Add the guardian data into profile program data
+                // Add the executor data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let recovery_threshold = profile_data[0];
                 let old_acct_len = profile_data[33];
@@ -419,19 +419,6 @@ impl Processor {
                     guardian_infos.push(guardian_info);
                 }
 
-                // // Create ProfileHeader and Serialize into profile pda (updated with executor)
-                // let profile_data_with_executor = ProfileHeader {
-                //     recovery_threshold,
-                //     executor: *executor_info.key,
-                //     guardians: initial_data.guardians.clone(),
-                // };
-                // let profile_data_with_executor_len = profile_data_with_executor.try_to_vec()?.len();
-                // msg!("data len: {}", profile_data_with_executor_len);
-                // msg!("Serializing with executor data...");
-                // profile_data_with_executor.serialize(
-                //     &mut &mut profile_info.try_borrow_mut_data()?[..profile_data_with_executor_len],
-                // )?;
-
                 let guardians = initial_data.guardians.clone();
 
                 // allocate space for 10 recovery accounts (guardian) in new profile account data
@@ -444,7 +431,6 @@ impl Processor {
                 );
                 msg!("New Profile PDA: {}", new_profile_pda);
 
-                /*
                 // create a new profile account
                 let create_profile_account_instruction = create_account(
                     new_authority_info.key,
@@ -474,7 +460,6 @@ impl Processor {
                         &[new_bump_seed],
                     ]],
                 )?;
-                */
 
                 // Create ProfileHeader and Serialize using borsh
                 let initial_data = ProfileHeader {
@@ -503,10 +488,6 @@ impl Processor {
                 let old_token_account_info = next_account_info(account_info_iter)?;
                 let new_token_account_info = next_account_info(account_info_iter)?;
                 let token_program_info = next_account_info(account_info_iter)?;
-
-                if !authority_info.is_signer {
-                    return Err(ProgramError::InvalidArgument);
-                }
 
                 let mut executor_key = Pubkey::default();
                 if recovery_mode == 1 {
@@ -563,6 +544,9 @@ impl Processor {
 
                 // close sender token account if executor from pda matches authority
                 // (meaning executor invoked the transfer and we should close the account)
+                msg!("Initial data executor: {}", initial_data.executor);
+                msg!("executor_key: {}", executor_key);
+
                 if recovery_mode == 1 && initial_data.executor == executor_key {
                     msg!("closing account...");
                     let close_ix = close_account(
