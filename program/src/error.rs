@@ -18,8 +18,6 @@ pub enum RecoveryError {
     NotEnoughGuardiansToRecover,
     #[error("The pubkey is not authorized to recover the wallet")]
     NotAuthorizedToRecover,
-    #[error("The executor is not a signer")]
-    ExecutorNotSigner,
 }
 
 impl From<RecoveryError> for ProgramError {

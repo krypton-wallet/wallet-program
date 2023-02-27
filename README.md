@@ -50,19 +50,9 @@ ProfileHeader format:
    </td>
   </tr>
   <tr>
-   <td>executor
-   </td>
-   <td>1~32
-   </td>
-   <td>Executes all transfers on behalf of authority during recovery mode
-   </td>
-   <td>Pubkey::default()
-   </td>
-  </tr>
-  <tr>
    <td>Size of vector of guardians
    </td>
-   <td>33~36
+   <td>1~4
    </td>
    <td>Preset space to store the size of vector
    </td>
@@ -72,7 +62,7 @@ ProfileHeader format:
   <tr>
    <td>Vector of guardians
    </td>
-   <td>37~(n*32+37)
+   <td>5~(n*32+5)
    </td>
    <td>Vector of guardian pubkeys
    </td>
@@ -99,17 +89,16 @@ change recovery threshold in pda
 
 ### Recover wallet
 
-Purpose: enter recovery mode by populating executor field in pda and moving all info from old pda to new pda seeded with new authority
+Purpose: enter recovery mode by moving all info from old pda to new pda seeded with new authority
 
-- Get PDA of old authority and stores the executor inside it
+- Get PDA of old authority
 - Create new profile account with new pda
 - Deserialize ProfileHeader from PDA and store it in the new pda
-- Executor field of new pda is initialized to Pubkey::default()
 
 ### Transfer to New Token Account
 
 Purpose: transfer to a destination token account and break into two cases: recovery and non-recovery; if in recovery mode, also need to close sender/src token account
 
-- Executor_info is read and executor key is set iff we are in recovery mode (recovery_mode == 1); in this case, executor must be a signer, since its responsibility is to sign for the program to transfer, as original authority is gone and cannot sign during recovery
 - Transfer from src to dest token account with given amount and sign the transaction with original pda
-- Close the src token account iff recovery_mode == 1 and executor in pda matches executor_info.key
+- Close the src token account iff recovery_mode == 1
+- Both transfer and close are signed by new feePayer
