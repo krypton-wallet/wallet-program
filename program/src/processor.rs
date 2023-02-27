@@ -431,6 +431,7 @@ impl Processor {
                 );
                 msg!("New Profile PDA: {}", new_profile_pda);
 
+                /*
                 // create a new profile account
                 let create_profile_account_instruction = create_account(
                     new_authority_info.key,
@@ -460,6 +461,7 @@ impl Processor {
                         &[new_bump_seed],
                     ]],
                 )?;
+                */
 
                 // Create ProfileHeader and Serialize using borsh
                 let initial_data = ProfileHeader {
