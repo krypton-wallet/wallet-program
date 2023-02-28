@@ -437,11 +437,11 @@ impl Processor {
                 Ok(())
             }
 
-            RecoveryInstruction::TransferToNewTokenAccount {
+            RecoveryInstruction::TransferToken {
                 amount,
                 recovery_mode,
             } => {
-                msg!("Instruction: TransferToNewTokenAccount");
+                msg!("Instruction: TransferToken");
 
                 let profile_info = next_account_info(account_info_iter)?;
                 let authority_info = next_account_info(account_info_iter)?;
@@ -511,6 +511,38 @@ impl Processor {
                     )?;
                     msg!("closed");
                 }
+
+                Ok(())
+            }
+
+            RecoveryInstruction::TransferNativeSOL {
+                amount,
+                recovery_mode,
+            } => {
+                msg!("Instruction: TransferNativeSOL");
+
+                let profile_info = next_account_info(account_info_iter)?;
+                let new_profile_info = next_account_info(account_info_iter)?;
+                let new_authority_info = next_account_info(account_info_iter)?;
+
+                if !new_authority_info.is_signer {
+                    return Err(ProgramError::InvalidArgument);
+                }
+
+                let balance = **profile_info.try_borrow_lamports()?;
+                if balance < amount {
+                    return Err(RecoveryError::InsufficientFundsForTransaction.into());
+                }
+
+                let amt ;
+                if recovery_mode == 1 {
+                    amt = balance;
+                } else {
+                    amt = amount;
+                }
+                **profile_info.try_borrow_mut_lamports()? -= amt;
+                **new_profile_info.try_borrow_mut_lamports()? += amt;
+                msg!("amount: {}", amt);
 
                 Ok(())
             }

@@ -45,8 +45,12 @@ pub enum RecoveryInstruction {
     RecoverWallet {
         acct_len: u8,
     },
-    TransferToNewTokenAccount {
+    TransferToken {
         amount: u64,
         recovery_mode: u8,
     },
+    TransferNativeSOL {
+        amount: u64,
+        recovery_mode: u8,
+    }
 }

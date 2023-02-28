@@ -18,6 +18,8 @@ pub enum RecoveryError {
     NotEnoughGuardiansToRecover,
     #[error("The pubkey is not authorized to recover the wallet")]
     NotAuthorizedToRecover,
+    #[error("There is insufficient SOL to transfer")]
+    InsufficientFundsForTransaction,
 }
 
 impl From<RecoveryError> for ProgramError {
