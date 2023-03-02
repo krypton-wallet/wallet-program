@@ -388,10 +388,6 @@ impl Processor {
                 let old_acct_len = profile_data[1];
                 let old_data_len = (old_acct_len * 32 + 5) as usize;
 
-                if recovery_threshold > acct_len {
-                    return Err(RecoveryError::NotEnoughGuardiansToRecover.into());
-                }
-
                 // Deserialize into ProfileHeader from profile program data
                 let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
                 let mut guardian_infos = Vec::with_capacity(acct_len.into());
