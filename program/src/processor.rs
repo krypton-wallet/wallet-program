@@ -7,7 +7,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction::create_account,
+    system_instruction::{allocate, assign, create_account},
     sysvar::Sysvar,
 };
 use spl_token::instruction::{close_account, transfer};
@@ -66,29 +66,52 @@ impl Processor {
                     return Err(ProgramError::InvalidSeeds);
                 }
 
-                // create profile account inside profile pda
-                let create_profile_account_instruction = create_account(
-                    authority_info.key,
-                    &profile_pda,
-                    Rent::get()?.minimum_balance(data_len as usize),
-                    data_len.into(),
-                    program_id,
-                );
+                // create profile account inside profile pda iff pda account does not exist
+                if **profile_info.try_borrow_lamports()? <= 0 {
+                    msg!("no lamports, creating new PDA account....");
+                    let create_profile_account_instruction = create_account(
+                        authority_info.key,
+                        &profile_pda,
+                        Rent::get()?.minimum_balance(data_len as usize),
+                        data_len.into(),
+                        program_id,
+                    );
 
-                // Invoke CPI to create profile account
-                invoke_signed(
-                    &create_profile_account_instruction,
-                    &[
-                        profile_info.clone(),
-                        authority_info.clone(),
-                        system_program_info.clone(),
-                    ],
-                    &[&[
-                        b"profile",
-                        authority_info.key.as_ref(),
-                        &[profile_bump_seed],
-                    ]],
-                )?;
+                    // Invoke CPI to create profile account
+                    invoke_signed(
+                        &create_profile_account_instruction,
+                        &[
+                            profile_info.clone(),
+                            authority_info.clone(),
+                            system_program_info.clone(),
+                        ],
+                        &[&[
+                            b"profile",
+                            authority_info.key.as_ref(),
+                            &[profile_bump_seed],
+                        ]],
+                    )?;
+                } else if profile_info.data_is_empty() {
+                    msg!("no space in PDA account, allocating space....");
+
+                    let assign_instruction = assign(&profile_pda, program_id);
+                    // Invoke CPI to assign my program to own PDA
+                    invoke_signed(
+                        &assign_instruction,
+                        &[
+                            profile_info.clone(),
+                            authority_info.clone(),
+                            system_program_info.clone(),
+                        ],
+                        &[&[
+                            b"profile",
+                            authority_info.key.as_ref(),
+                            &[profile_bump_seed],
+                        ]],
+                    )?;
+
+                    profile_info.realloc(data_len as usize, false)?;
+                }
 
                 // Create ProfileHeader and Serialize using borsh
                 let initial_data = ProfileHeader {
@@ -277,10 +300,10 @@ impl Processor {
                 msg!("acct_len: {}", acct_len);
                 msg!("recover thres: {}", recovery_threshold);
 
-                // assert that total number of guardians are greater than or equal to the recovery threshold
-                if old_acct_len - acct_len < recovery_threshold {
-                    return Err(RecoveryError::NotEnoughGuardians.into());
-                }
+                // // assert that total number of guardians are greater than or equal to the recovery threshold
+                // if old_acct_len - acct_len < recovery_threshold {
+                //     return Err(RecoveryError::NotEnoughGuardians.into());
+                // }
 
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data =
@@ -530,7 +553,7 @@ impl Processor {
                     return Err(RecoveryError::InsufficientFundsForTransaction.into());
                 }
 
-                let amt ;
+                let amt;
                 if recovery_mode == 1 {
                     amt = balance;
                 } else {
