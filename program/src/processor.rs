@@ -7,7 +7,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction::{allocate, assign, create_account},
+    system_instruction::{assign, create_account},
     sysvar::Sysvar,
 };
 use spl_token::instruction::{close_account, transfer};
@@ -32,6 +32,7 @@ impl Processor {
             RecoveryInstruction::InitializeSocialWallet {
                 acct_len,
                 recovery_threshold,
+                secret
             } => {
                 msg!("Instruction: InitializeSocialWallet");
 
@@ -41,9 +42,11 @@ impl Processor {
 
                 // Store list of guardians (social recovery list)
                 let mut guardians = Vec::with_capacity(acct_len.into());
+                let mut guardian_idxs: Vec<u8> = Vec::with_capacity(acct_len.into());
                 for _ in 0..acct_len {
                     let guardian_account_info = next_account_info(account_info_iter)?;
                     guardians.push(*guardian_account_info.key);
+                    guardian_idxs.push(11);
                 }
 
                 /*
@@ -51,9 +54,11 @@ impl Processor {
                     1: recovery_threshold
                     4: size of vector of guardians
                     32 * 10: space for 10 guardians
+                    1 * 10: space for 10 guardian indexes
+                    32 * 1 space for string
                 */
 
-                let data_len = (1 + 4 + 32 * 10) as u64;
+                let data_len = (1 + 4 + 32 * 10 + 10 + 32) as u64; //michael this isn't done!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 msg!("Number of bytes of data: {}", data_len);
 
                 // find pda of profile account for given authority
@@ -117,6 +122,8 @@ impl Processor {
                 let initial_data = ProfileHeader {
                     recovery_threshold,
                     guardians,
+                    guardian_idxs,
+                    secret
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
@@ -145,7 +152,7 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
 
                 // assert that total number of guardians are less than or equal to 10
                 if old_acct_len + acct_len > 10 {
@@ -175,6 +182,7 @@ impl Processor {
                         guardian_account_info.key.to_bytes()
                     );
                     initial_data.guardians.push(*guardian_account_info.key);
+                    initial_data.guardian_idxs.push(11);
                 }
 
                 // Log new guardians after add
@@ -215,7 +223,7 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data =
@@ -294,7 +302,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
                 let recovery_threshold = profile_data[0];
-                let old_data_len = (old_acct_len * 32 + 5) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
 
                 msg!("old acct len: {}", old_acct_len);
                 msg!("acct_len: {}", acct_len);
@@ -334,6 +342,7 @@ impl Processor {
 
                     // replace old with new key in the index of old key
                     initial_data.guardians.remove(index);
+                    initial_data.guardian_idxs.remove(index);
                     msg!("deleted guardian {:x?}", guardian_pk.to_bytes());
                 }
 
@@ -409,7 +418,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let recovery_threshold = profile_data[0];
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
@@ -433,6 +442,8 @@ impl Processor {
                 }
 
                 let guardians = initial_data.guardians.clone();
+                let guardian_idxs = initial_data.guardian_idxs.clone();
+                let secret = initial_data.secret.clone();
 
                 // find pda of new profile account for new authority
                 let (new_profile_pda, _) = Pubkey::find_program_address(
@@ -445,6 +456,8 @@ impl Processor {
                 let initial_data = ProfileHeader {
                     recovery_threshold,
                     guardians,
+                    guardian_idxs,
+                    secret
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);

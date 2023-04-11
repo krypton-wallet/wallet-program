@@ -13,6 +13,7 @@ pub enum RecoveryInstruction {
     InitializeSocialWallet {
         acct_len: u8,
         recovery_threshold: u8,
+        secret: String
     },
     /// The contents of the data vector that is provided to the instruction will be copied into the `authorized_buffer` account
     /// starting from index 9 (will NOT override the bump_seed and buffer_seed).

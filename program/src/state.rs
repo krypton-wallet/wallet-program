@@ -5,4 +5,6 @@ use solana_program::{pubkey::Pubkey};
 pub struct ProfileHeader {
     pub recovery_threshold: u8,
     pub guardians: Vec<Pubkey>,
+    pub guardian_idxs: Vec<u8>,
+    pub secret: String
 }
