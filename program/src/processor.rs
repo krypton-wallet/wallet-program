@@ -32,7 +32,8 @@ impl Processor {
             RecoveryInstruction::InitializeSocialWallet {
                 acct_len,
                 recovery_threshold,
-                secret
+                priv_scan,
+                priv_spend
             } => {
                 msg!("Instruction: InitializeSocialWallet");
 
@@ -55,10 +56,10 @@ impl Processor {
                     4: size of vector of guardians
                     32 * 10: space for 10 guardians
                     1 * 10: space for 10 guardian indexes
-                    32 * 1 space for string
+                    32 * 2 space for 2 encrypted keys
                 */
 
-                let data_len = (1 + 4 + 32 * 10 + 10 + 32) as u64; //michael this isn't done!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                let data_len = (1 + 4 + 32 * 10 + 10 + 32 * 2) as u64; 
                 msg!("Number of bytes of data: {}", data_len);
 
                 // find pda of profile account for given authority
@@ -123,7 +124,8 @@ impl Processor {
                     recovery_threshold,
                     guardians,
                     guardian_idxs,
-                    secret
+                    priv_scan: priv_scan,
+                    priv_spend: priv_spend
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
@@ -152,7 +154,7 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
 
                 // assert that total number of guardians are less than or equal to 10
                 if old_acct_len + acct_len > 10 {
@@ -223,7 +225,7 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data =
@@ -302,7 +304,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
                 let recovery_threshold = profile_data[0];
-                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
 
                 msg!("old acct len: {}", old_acct_len);
                 msg!("acct_len: {}", acct_len);
@@ -418,7 +420,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let recovery_threshold = profile_data[0];
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 42) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
@@ -443,7 +445,8 @@ impl Processor {
 
                 let guardians = initial_data.guardians.clone();
                 let guardian_idxs = initial_data.guardian_idxs.clone();
-                let secret = initial_data.secret.clone();
+                let priv_scan = initial_data.priv_scan.clone();
+                let priv_spend = initial_data.priv_spend.clone();
 
                 // find pda of new profile account for new authority
                 let (new_profile_pda, _) = Pubkey::find_program_address(
@@ -457,7 +460,8 @@ impl Processor {
                     recovery_threshold,
                     guardians,
                     guardian_idxs,
-                    secret
+                    priv_scan,
+                    priv_spend
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
                 msg!("data len: {}", initial_data_len);
@@ -575,6 +579,43 @@ impl Processor {
                 **profile_info.try_borrow_mut_lamports()? -= amt;
                 **new_profile_info.try_borrow_mut_lamports()? += amt;
                 msg!("amount: {}", amt);
+
+                Ok(())
+            }
+
+            RecoveryInstruction::UpdateSecret {
+                priv_scan,
+                priv_spend
+            } => {
+                msg!("Instruction: UpdateSecret");
+
+                let profile_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+
+                // find pda of profile account for given authority
+                let (profile_pda, _) = Pubkey::find_program_address(
+                    &[b"profile", authority_info.key.as_ref()],
+                    program_id,
+                );
+
+                if profile_pda != *profile_info.key {
+                    return Err(ProgramError::InvalidSeeds);
+                }
+
+                
+                
+                // Add the guardian data into profile program data
+                let profile_data = &mut profile_info.try_borrow_mut_data()?;
+                let old_acct_len = profile_data[1];
+                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let mut initial_data =
+                    ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
+
+                initial_data.priv_scan = priv_scan;
+                initial_data.priv_spend = priv_spend;
+                initial_data.serialize(
+                    &mut &mut profile_info.try_borrow_mut_data()?[..old_data_len],
+                )?;
 
                 Ok(())
             }

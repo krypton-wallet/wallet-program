@@ -13,7 +13,8 @@ pub enum RecoveryInstruction {
     InitializeSocialWallet {
         acct_len: u8,
         recovery_threshold: u8,
-        secret: String
+        priv_scan: String,
+        priv_spend: String
     },
     /// The contents of the data vector that is provided to the instruction will be copied into the `authorized_buffer` account
     /// starting from index 9 (will NOT override the bump_seed and buffer_seed).
@@ -53,5 +54,9 @@ pub enum RecoveryInstruction {
     TransferNativeSOL {
         amount: u64,
         recovery_mode: u8,
+    },
+    UpdateSecret {
+        priv_scan: String,
+        priv_spend: String,
     }
 }
