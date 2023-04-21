@@ -52,5 +52,9 @@ pub enum RecoveryInstruction {
     TransferNativeSOL {
         amount: u64,
         recovery_mode: u8,
-    }
+    },
+    WrapSignInstr {
+        acct_len: u8,
+        custom_data: Vec<u8>,
+    },
 }

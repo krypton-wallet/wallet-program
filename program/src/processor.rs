@@ -2,12 +2,13 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
+    instruction::{AccountMeta, Instruction},
     msg,
     program::invoke_signed,
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction::{allocate, assign, create_account},
+    system_instruction::{assign, create_account},
     sysvar::Sysvar,
 };
 use spl_token::instruction::{close_account, transfer};
@@ -563,6 +564,100 @@ impl Processor {
                 **new_profile_info.try_borrow_mut_lamports()? += amt;
                 msg!("amount: {}", amt);
 
+                Ok(())
+            }
+
+            RecoveryInstruction::WrapSignInstr {
+                acct_len,
+                custom_data,
+            } => {
+                msg!("==========================");
+                msg!("Instruction: WrapSignInstr");
+
+                let profile_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+                let custom_program_info = next_account_info(account_info_iter)?;
+
+                msg!("acct_len: {}", acct_len);
+
+                // find pda of profile account for given authority
+                let (profile_pda, bump_seed) = Pubkey::find_program_address(
+                    &[b"profile", authority_info.key.as_ref()],
+                    program_id,
+                );
+                if profile_pda != *profile_info.key {
+                    return Err(ProgramError::InvalidSeeds);
+                }
+
+                const DATA_LEN: usize = 1 + 4 + 32 * 10;
+
+                let mut custom_account_infos = Vec::with_capacity(acct_len.into());
+                let mut custom_account_metas: Vec<AccountMeta> =
+                    Vec::with_capacity(acct_len.into());
+
+                let mut system_account_info: Option<&AccountInfo> = None;
+                let mut old_data: [u8; DATA_LEN] = [0; DATA_LEN];
+                old_data.copy_from_slice(&profile_info.data.borrow()[..]);
+
+                if *custom_program_info.key == solana_program::system_program::ID {
+                    system_account_info = Some(custom_program_info);
+                    msg!("Program is SystemProgram owned! ");
+                }
+
+                for _ in 0..acct_len {
+                    let custom_account_info = next_account_info(account_info_iter)?;
+                    let custom_account_info_cloned = custom_account_info.clone();
+                    custom_account_infos.push(custom_account_info_cloned);
+
+                    if solana_program::system_program::check_id(custom_account_info.key) {
+                        system_account_info = Some(custom_account_info);
+                    }
+
+                    let new_meta: AccountMeta = if profile_pda == *custom_account_info.key {
+                        AccountMeta::new(*custom_account_info.key, true)
+                    } else if custom_account_info.is_writable {
+                        AccountMeta::new(*custom_account_info.key, custom_account_info.is_signer)
+                    } else {
+                        AccountMeta::new_readonly(
+                            *custom_account_info.key,
+                            custom_account_info.is_signer,
+                        )
+                    };
+                    // msg!("account meta {}: {:?}", i, new_meta);
+                    custom_account_metas.push(new_meta);
+                }
+
+                if system_account_info.is_some()
+                    || *custom_program_info.key == solana_program::system_program::ID
+                {
+                    profile_info.realloc(0, false)?;
+                    profile_info.assign(&solana_program::system_program::ID);
+                }
+
+                msg!("{:?}", custom_data);
+                let instr = Instruction::new_with_bytes(
+                    *custom_program_info.key,
+                    custom_data.as_slice(),
+                    custom_account_metas,
+                );
+                invoke_signed(
+                    &instr,
+                    custom_account_infos.as_slice(),
+                    &[&[b"profile", authority_info.key.as_ref(), &[bump_seed]]],
+                )?;
+                msg!("invoked_signed!");
+                if system_account_info.is_some()
+                    || *custom_program_info.key == solana_program::system_program::ID
+                {
+                    let assign_ix = assign(&profile_pda, &program_id);
+                    invoke_signed(
+                        &assign_ix,
+                        &[profile_info.clone(), system_account_info.unwrap().clone()],
+                        &[&[b"profile", authority_info.key.as_ref(), &[bump_seed]]],
+                    )?;
+                    profile_info.realloc(DATA_LEN, false)?;
+                    profile_info.data.borrow_mut()[..].copy_from_slice(&old_data);
+                }
                 Ok(())
             }
         }
