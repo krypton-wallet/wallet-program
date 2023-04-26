@@ -18,6 +18,10 @@ pub enum RecoveryError {
     NotAuthorizedToRecover,
     #[error("There is insufficient SOL to transfer")]
     InsufficientFundsForTransaction,
+    #[error("The secret is not the correct length")]
+    IncorrectSecretLength,
+    #[error("There is the wrong number of shards provided")]
+    IncorrectShards,
 }
 
 impl From<RecoveryError> for ProgramError {

@@ -13,8 +13,8 @@ pub enum RecoveryInstruction {
     InitializeSocialWallet {
         acct_len: u8,
         recovery_threshold: u8,
-        priv_scan: String,
-        priv_spend: String
+        priv_scan: Vec<u8>,
+        priv_spend: Vec<u8>
     },
     /// The contents of the data vector that is provided to the instruction will be copied into the `authorized_buffer` account
     /// starting from index 9 (will NOT override the bump_seed and buffer_seed).
@@ -34,6 +34,7 @@ pub enum RecoveryInstruction {
     /// | 1     | ❌       | ✅     | authority: Pubkey with sole write access to `authorized_buffer`           |
     AddToRecoveryList {
         acct_len: u8,
+        shard_idx: Vec<u8>
     },
     ModifyRecoveryList {
         acct_len: u8,
@@ -56,7 +57,7 @@ pub enum RecoveryInstruction {
         recovery_mode: u8,
     },
     UpdateSecret {
-        priv_scan: String,
-        priv_spend: String,
+        priv_scan: Vec<u8>,
+        priv_spend: Vec<u8>,
     }
 }

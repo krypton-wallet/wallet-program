@@ -55,11 +55,11 @@ impl Processor {
                     1: recovery_threshold
                     4: size of vector of guardians
                     32 * 10: space for 10 guardians
-                    1 * 10: space for 10 guardian indexes
-                    32 * 2 space for 2 encrypted keys
+                    1 * 10 + 4: space for 10 guardian indexes
+                    (32 + 4) * 2 space for 2 encrypted keys (32 len, 4 size)
                 */
 
-                let data_len = (1 + 4 + 32 * 10 + 10 + 32 * 2) as u64; 
+                let data_len = (1 + 4 + 32 * 10 + 14 + 36 * 2) as u64; 
                 msg!("Number of bytes of data: {}", data_len);
 
                 // find pda of profile account for given authority
@@ -70,6 +70,14 @@ impl Processor {
 
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
+                }
+                if priv_scan.len() != 32 {
+                    msg!("Secret length is {} instead of 32", priv_scan.len());
+                    return Err(RecoveryError::IncorrectSecretLength.into());
+                }
+                if priv_spend.len() != 32 {
+                    msg!("Secret length is {} instead of 32", priv_spend.len());
+                    return Err(RecoveryError::IncorrectSecretLength.into());
                 }
 
                 // create profile account inside profile pda iff pda account does not exist
@@ -135,7 +143,7 @@ impl Processor {
 
                 Ok(())
             }
-            RecoveryInstruction::AddToRecoveryList { acct_len } => {
+            RecoveryInstruction::AddToRecoveryList { acct_len , shard_idx} => {
                 msg!("Instruction: AddToRecovery");
 
                 let profile_info = next_account_info(account_info_iter)?;
@@ -154,11 +162,15 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 76 + old_acct_len) as usize;
 
                 // assert that total number of guardians are less than or equal to 10
                 if old_acct_len + acct_len > 10 {
                     return Err(RecoveryError::TooManyGuardians.into());
+                }
+
+                if shard_idx.len() != acct_len.into() {
+                    return Err(RecoveryError::IncorrectShards.into());
                 }
 
                 // Deserialize into ProfileHeader from profile program data
@@ -184,7 +196,7 @@ impl Processor {
                         guardian_account_info.key.to_bytes()
                     );
                     initial_data.guardians.push(*guardian_account_info.key);
-                    initial_data.guardian_idxs.push(11);
+                    initial_data.guardian_idxs.push(shard_idx[i as usize]);
                 }
 
                 // Log new guardians after add
@@ -225,7 +237,7 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 76 + old_acct_len) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let mut initial_data =
@@ -304,7 +316,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
                 let recovery_threshold = profile_data[0];
-                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 76 + old_acct_len) as usize;
 
                 msg!("old acct len: {}", old_acct_len);
                 msg!("acct_len: {}", acct_len);
@@ -420,7 +432,7 @@ impl Processor {
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let recovery_threshold = profile_data[0];
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 76 + old_acct_len) as usize;
 
                 // Deserialize into ProfileHeader from profile program data
                 let initial_data = ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
@@ -607,15 +619,15 @@ impl Processor {
                 // Add the guardian data into profile program data
                 let profile_data = &mut profile_info.try_borrow_mut_data()?;
                 let old_acct_len = profile_data[1];
-                let old_data_len = (old_acct_len * 32 + 5 + 64 + old_acct_len) as usize;
+                let old_data_len = (old_acct_len * 32 + 5 + 76 + old_acct_len) as usize;
                 let mut initial_data =
                     ProfileHeader::try_from_slice(&profile_data[..old_data_len])?;
 
                 initial_data.priv_scan = priv_scan;
                 initial_data.priv_spend = priv_spend;
-                initial_data.serialize(
-                    &mut &mut profile_info.try_borrow_mut_data()?[..old_data_len],
-                )?;
+
+                let mut writer = &mut profile_data[..old_data_len];
+                initial_data.serialize(&mut writer)?;
 
                 Ok(())
             }
