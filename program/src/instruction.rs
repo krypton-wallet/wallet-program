@@ -46,17 +46,17 @@ pub struct ModifyRecoveryThresholdArgs {
     pub new_threshold: u8,
 }
 
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct AddRecoverySignArgs {}
+// #[derive(Clone, BorshSerialize, BorshDeserialize)]
+// pub struct AddRecoverySignArgs {}
 
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverWalletArgs {}
+// #[derive(Clone, BorshSerialize, BorshDeserialize)]
+// pub struct RecoverWalletArgs {}
 
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverTokenArgs {}
+// #[derive(Clone, BorshSerialize, BorshDeserialize)]
+// pub struct RecoverTokenArgs {}
 
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverNativeSOLArgs {}
+// #[derive(Clone, BorshSerialize, BorshDeserialize)]
+// pub struct RecoverNativeSOLArgs {}
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
@@ -183,7 +183,7 @@ pub enum KryptonInstruction {
     #[account(2, name = "new_profile_info", desc = "PDA to be recovered into")]
     #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
     #[account(4, signer, name = "guardian_info", desc = "Pubkey of recovery guardian")]
-    AddRecoverySign(AddRecoverySignArgs),
+    AddRecoverySign,
     /// This instruction recovers the wallet into the new PDA provided there are at least `recovery_threshold`
     /// guardian signatures for the recovery
     ///
@@ -199,7 +199,7 @@ pub enum KryptonInstruction {
     #[account(1, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
     #[account(2, writable, name = "new_profile_info", desc = "PDA to be recovered into")]
     #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
-    RecoverWallet(RecoverTokenArgs),
+    RecoverWallet,
     /// This instruction recovers the wallet into the new PDA provided there are at least `recovery_threshold`
     /// guardian signatures for the recovery
     ///
@@ -221,7 +221,7 @@ pub enum KryptonInstruction {
     #[account(4, writable, name = "old_token_account_info", desc = "ATA of the PDA to be recovered")]
     #[account(5, writable, name = "new_token_account_info", desc = "ATA of the PDA to be recovered into")]
     #[account(6, name = "token_program", desc = "Used to transfer token")]
-    RecoverToken(RecoverTokenArgs),
+    RecoverToken,
     /// This instruction recovers all the native SOL from the old wallet into the new PDA provided there
     /// are at least `recovery_threshold`
     /// guardian signatures for the recovery
@@ -238,5 +238,5 @@ pub enum KryptonInstruction {
     #[account(1, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
     #[account(2, writable, name = "new_profile_info", desc = "PDA to be recovered into")]
     #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
-    RecoverNativeSOL(RecoverNativeSOLArgs),
+    RecoverNativeSOL,
 }

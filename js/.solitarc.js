@@ -7,13 +7,9 @@ const binaryInstallDir = path.join(__dirname, '.crates');
 
 module.exports = {
   idlGenerator: 'shank',
-  programName: 'mpl_token_metadata',
+  programName: 'krypton',
   idlDir,
   sdkDir,
   binaryInstallDir,
   programDir,
-  serializers: {
-    Metadata: './src/custom/metadata-deserializer.ts',
-    TokenRecord: './src/custom/token-record-deserializer.ts',
-  },
 };

@@ -1,0 +1,705 @@
+{
+  "version": "0.1.0",
+  "name": "krypton",
+  "instructions": [
+    {
+      "name": "InitializeWallet",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Used to create/reassign the PDA"
+        }
+      ],
+      "args": [
+        {
+          "name": "initializeWalletArgs",
+          "type": {
+            "defined": "InitializeWalletArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "TransferToken",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "tokenAccountInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "ATA of the PDA"
+        },
+        {
+          "name": "destTokenAccountInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Destination Token Account"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Used to transfer token"
+        }
+      ],
+      "args": [
+        {
+          "name": "transferTokenArgs",
+          "type": {
+            "defined": "TransferTokenArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "TransferNativeSOL",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Destination Pubkey"
+        }
+      ],
+      "args": [
+        {
+          "name": "transferNativeSolArgs",
+          "type": {
+            "defined": "TransferNativeSOLArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "WrapInstruction",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "customProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Calling program of the original instruction"
+        },
+        {
+          "name": "customAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Account required by original instruction"
+        }
+      ],
+      "args": [
+        {
+          "name": "wrapInstructionArgs",
+          "type": {
+            "defined": "WrapInstructionArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "UpdateSecret",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        }
+      ],
+      "args": [
+        {
+          "name": "updateSecretArgs",
+          "type": {
+            "defined": "UpdateSecretArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "AddRecoveryGuardians",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "guardian",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey that will act as guardian to recover profile_info"
+        }
+      ],
+      "args": [
+        {
+          "name": "addRecoveryGuardianArgs",
+          "type": {
+            "defined": "AddRecoveryGuardianArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "RemoveRecoveryGuardians",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        },
+        {
+          "name": "guardian",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey that will act as guardian to recover profile_info"
+        }
+      ],
+      "args": [
+        {
+          "name": "removeRecoveryGuardianArgs",
+          "type": {
+            "defined": "RemoveRecoveryGuardianArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    },
+    {
+      "name": "ModifyRecoveryThreshold",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of keypair of PDA"
+        }
+      ],
+      "args": [
+        {
+          "name": "modifyRecoveryThresholdArgs",
+          "type": {
+            "defined": "ModifyRecoveryThresholdArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
+      "name": "AddRecoverySign",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program to be recovered"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey of keypair of PDA to be recovered"
+        },
+        {
+          "name": "newProfileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to be recovered into"
+        },
+        {
+          "name": "newAuthorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of the keypair to be recovered into"
+        },
+        {
+          "name": "guardianInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of recovery guardian"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
+      "name": "RecoverWallet",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program to be recovered"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey of keypair of PDA to be recovered"
+        },
+        {
+          "name": "newProfileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA to be recovered into"
+        },
+        {
+          "name": "newAuthorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of the keypair to be recovered into"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
+      }
+    },
+    {
+      "name": "RecoverToken",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program to be recovered"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey of keypair of PDA to be recovered"
+        },
+        {
+          "name": "newProfileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to be recovered into"
+        },
+        {
+          "name": "newAuthorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of the keypair to be recovered into"
+        },
+        {
+          "name": "oldTokenAccountInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "ATA of the PDA to be recovered"
+        },
+        {
+          "name": "newTokenAccountInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "ATA of the PDA to be recovered into"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Used to transfer token"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
+    },
+    {
+      "name": "RecoverNativeSOL",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program to be recovered"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey of keypair of PDA to be recovered"
+        },
+        {
+          "name": "newProfileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA to be recovered into"
+        },
+        {
+          "name": "newAuthorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of the keypair to be recovered into"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 11
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProfileHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "recoveryThreshold",
+            "type": "u8"
+          },
+          {
+            "name": "guardians",
+            "type": {
+              "array": [
+                {
+                  "defined": "Guardian"
+                },
+                10
+              ]
+            }
+          },
+          {
+            "name": "privScan",
+            "type": "bytes"
+          },
+          {
+            "name": "privSpend",
+            "type": "bytes"
+          },
+          {
+            "name": "recovery",
+            "type": "publicKey"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "InitializeWalletArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recoveryThreshold",
+            "type": "u8"
+          },
+          {
+            "name": "privScan",
+            "type": "bytes"
+          },
+          {
+            "name": "privSpend",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferTokenArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferNativeSOLArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WrapInstructionArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numAccounts",
+            "type": "u8"
+          },
+          {
+            "name": "customData",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateSecretArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "privScan",
+            "type": "bytes"
+          },
+          {
+            "name": "privSpend",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddRecoveryGuardianArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numGuardians",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemoveRecoveryGuardianArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numGuardians",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ModifyRecoveryThresholdArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "newThreshold",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardian",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "shardIdx",
+            "type": "u8"
+          },
+          {
+            "name": "hasSigned",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "NotWriteable",
+      "msg": "Account should be writeable"
+    },
+    {
+      "code": 1,
+      "name": "NoAccountLength",
+      "msg": "Account should not have 0 length data"
+    },
+    {
+      "code": 2,
+      "name": "NonZeroData",
+      "msg": "Account should not have non-zero data"
+    },
+    {
+      "code": 3,
+      "name": "NotSigner",
+      "msg": "Account should be signer"
+    },
+    {
+      "code": 4,
+      "name": "InvalidSysProgram",
+      "msg": "Account should be valid system program"
+    },
+    {
+      "code": 5,
+      "name": "TooManyGuardians",
+      "msg": "There are too many guardians"
+    },
+    {
+      "code": 6,
+      "name": "NotEnoughGuardians",
+      "msg": "There are too few guardians passed in"
+    },
+    {
+      "code": 7,
+      "name": "NotEnoughAccounts",
+      "msg": "Specified amount of accounts are not passed in"
+    },
+    {
+      "code": 8,
+      "name": "GuardianNotFound",
+      "msg": "The Guardian provided is not in the data"
+    },
+    {
+      "code": 9,
+      "name": "MissingGuardianSignatures",
+      "msg": "There are not enough guardian signatures to recover"
+    },
+    {
+      "code": 10,
+      "name": "InvalidRecoveryThreshold",
+      "msg": "Recovery Threshold must be between 1 to 10"
+    },
+    {
+      "code": 11,
+      "name": "NotAuthorizedToRecover",
+      "msg": "The pubkey is not authorized to recover the wallet"
+    },
+    {
+      "code": 12,
+      "name": "InsufficientFundsForTransaction",
+      "msg": "There is insufficient SOL to transfer"
+    },
+    {
+      "code": 13,
+      "name": "Overflow",
+      "msg": "Operation overflowed"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "2aJqX3GKRPAsfByeMkL7y9SqAGmCQEnakbuHJBdxGaDL",
+    "binaryVersion": "0.0.12",
+    "libVersion": "0.0.12"
+  }
+}
