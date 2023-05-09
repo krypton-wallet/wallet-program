@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
 /*
@@ -43,72 +44,16 @@ pub fn verify_recovery_state(profile_data: &ProfileHeader) -> bool {
     num_signatures >= profile_data.recovery_threshold as usize
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, ShankAccount)]
 pub struct ProfileHeader {
     /// keypair Pubkey of PDA
     pub authority: Pubkey,
     /// number of guardian signatures required to sign on recovery
     pub recovery_threshold: u8,
     /// guardians
-    pub guardians: [Guardian; MAX_GUARDIANS as usize],
+    pub guardians: [Guardian; 10],
     pub priv_scan: Vec<u8>,
     pub priv_spend: Vec<u8>,
     /// new PDA Pubkey to recover wallet into
     pub recovery: Pubkey,
 }
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct InitializeWalletArgs {
-    pub recovery_threshold: u8,
-    pub priv_scan: Vec<u8>,
-    pub priv_spend: Vec<u8>,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct TransferTokenArgs {
-    pub amount: u64,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct TransferNativeSOLArgs {
-    pub amount: u64,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct WrapInstructionArgs {
-    pub num_accounts: u8,
-    pub custom_data: Vec<u8>,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct UpdateSecretArgs {
-    pub priv_scan: Vec<u8>,
-    pub priv_spend: Vec<u8>,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct AddRecoveryGuardianArgs {
-    pub num_guardians: u8,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RemoveRecoveryGuardianArgs {
-    pub num_guardians: u8,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct ModifyRecoveryThresholdArgs {
-    pub new_threshold: u8,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct AddRecoverySignArgs {}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverWalletArgs {}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverTokenArgs {}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct RecoverNativeSOLArgs {}

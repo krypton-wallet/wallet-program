@@ -75,7 +75,7 @@ impl Processor {
                 msg!("account checks complete");
 
                 // create profile account inside profile pda iff pda account does not exist
-                if **profile_info.try_borrow_lamports()? <= 0 {
+                if **profile_info.try_borrow_lamports()? == 0 {
                     msg!("no lamports, creating new PDA account....");
                     let create_profile_account_instruction = create_account(
                         authority_info.key,
@@ -540,7 +540,7 @@ impl Processor {
                 let authority_info = next_account_info(account_info_iter)?;
 
                 // ensure the new threshold is valid
-                if args.new_threshold > MAX_GUARDIANS || args.new_threshold <= 0 {
+                if args.new_threshold > MAX_GUARDIANS || args.new_threshold == 0 {
                     return Err(KryptonError::InvalidRecoveryThreshold.into());
                 }
 
