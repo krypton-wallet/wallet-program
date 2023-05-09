@@ -574,7 +574,7 @@ impl Processor {
 
                 Ok(())
             }
-            KryptonInstruction::AddRecoverySign(_args) => {
+            KryptonInstruction::AddRecoverySign => {
                 msg!("Instruction: AddRecoverySign");
 
                 let profile_info = next_account_info(account_info_iter)?;
@@ -642,7 +642,7 @@ impl Processor {
 
                 Ok(())
             }
-            KryptonInstruction::RecoverWallet(_args) => {
+            KryptonInstruction::RecoverWallet => {
                 msg!("Instruction: RecoverWallet");
 
                 let profile_info = next_account_info(account_info_iter)?;
@@ -701,7 +701,7 @@ impl Processor {
 
                 Ok(())
             }
-            KryptonInstruction::RecoverToken(_args) => {
+            KryptonInstruction::RecoverToken => {
                 msg!("Instruction: RecoverToken");
 
                 let profile_info = next_account_info(account_info_iter)?;
@@ -809,7 +809,7 @@ impl Processor {
 
                 Ok(())
             }
-            KryptonInstruction::RecoverNativeSOL(_args) => {
+            KryptonInstruction::RecoverNativeSOL => {
                 msg!("Instruction: RecoverNativeSOL");
 
                 let profile_info = next_account_info(account_info_iter)?;
