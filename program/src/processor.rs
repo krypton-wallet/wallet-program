@@ -20,7 +20,7 @@ use spl_token::{
 
 use crate::{
     error::KryptonError,
-    state::{verify_recovery_state, ProfileHeader},
+    state::{get_profile_pda, verify_recovery_state, ProfileHeader},
 };
 use crate::{
     instruction::KryptonInstruction,
@@ -59,10 +59,8 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, profile_bump_seed) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, profile_bump_seed) =
+                    get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -120,8 +118,6 @@ impl Processor {
                     guardians: vec![Guardian::default(); MAX_GUARDIANS as usize]
                         .try_into()
                         .unwrap(),
-                    priv_scan: args.priv_scan,
-                    priv_spend: args.priv_spend,
                     recovery: Pubkey::default(),
                 };
                 let initial_data_len = initial_data.try_to_vec()?.len();
@@ -152,10 +148,7 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, bump_seed) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, bump_seed) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -213,10 +206,7 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -259,10 +249,7 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, bump_seed) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, bump_seed) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -339,43 +326,6 @@ impl Processor {
 
                 Ok(())
             }
-            KryptonInstruction::UpdateSecret(args) => {
-                msg!("Instruction: UpdateSecret");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                // update priv_scan and priv_spend
-                profile_data.priv_scan = args.priv_scan;
-                profile_data.priv_spend = args.priv_spend;
-                profile_data.serialize(&mut &mut profile_info.try_borrow_mut_data()?[..])?;
-
-                Ok(())
-            }
             KryptonInstruction::AddRecoveryGuardians(args) => {
                 msg!("Instruction: AddRecoveryGuardians");
 
@@ -398,10 +348,7 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -487,11 +434,7 @@ impl Processor {
                     return Err(KryptonError::NotWriteable.into());
                 }
 
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -555,10 +498,7 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -594,19 +534,13 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
 
                 // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, new_authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
                 if new_profile_pda != *new_profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -661,19 +595,13 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
 
                 // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, new_authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
                 if new_profile_pda != *new_profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -723,19 +651,13 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, bump_seed) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, bump_seed) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
 
                 // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, new_authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
                 if new_profile_pda != *new_profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
@@ -828,19 +750,13 @@ impl Processor {
                 }
 
                 // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
                 if profile_pda != *profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }
 
                 // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = Pubkey::find_program_address(
-                    &[PDA_SEED, new_authority_info.key.as_ref()],
-                    program_id,
-                );
+                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
                 if new_profile_pda != *new_profile_info.key {
                     return Err(ProgramError::InvalidSeeds);
                 }

@@ -34,7 +34,12 @@ impl Default for Guardian {
     }
 }
 
-/// verifies if profile_data has at least recover_threshold guardian signatures
+/// Returns associated profile PDA for data_account PubKey
+pub fn get_profile_pda(datakey: &Pubkey, program_id: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[PDA_SEED, datakey.as_ref()], program_id)
+}
+
+/// Verifies if profile_data has at least recover_threshold guardian signatures
 pub fn verify_recovery_state(profile_data: &ProfileHeader) -> bool {
     let num_signatures = profile_data
         .guardians
@@ -52,8 +57,6 @@ pub struct ProfileHeader {
     pub recovery_threshold: u8,
     /// guardians
     pub guardians: [Guardian; 10],
-    pub priv_scan: Vec<u8>,
-    pub priv_spend: Vec<u8>,
     /// new PDA Pubkey to recover wallet into
     pub recovery: Pubkey,
 }

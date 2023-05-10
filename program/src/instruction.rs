@@ -5,8 +5,6 @@ use shank::ShankInstruction;
 #[derive(Clone, BorshSerialize, BorshDeserialize)]
 pub struct InitializeWalletArgs {
     pub recovery_threshold: u8,
-    pub priv_scan: Vec<u8>,
-    pub priv_spend: Vec<u8>,
 }
 
 #[derive(Clone, BorshSerialize, BorshDeserialize)]
@@ -23,12 +21,6 @@ pub struct TransferNativeSOLArgs {
 pub struct WrapInstructionArgs {
     pub num_accounts: u8,
     pub custom_data: Vec<u8>,
-}
-
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
-pub struct UpdateSecretArgs {
-    pub priv_scan: Vec<u8>,
-    pub priv_spend: Vec<u8>,
 }
 
 #[derive(Clone, BorshSerialize, BorshDeserialize)]
@@ -119,17 +111,6 @@ pub enum KryptonInstruction {
     #[account(2, name = "custom_program", desc = "Calling program of the original instruction")]
     #[account(3, name = "custom_account", desc = "Account required by original instruction")]
     WrapInstruction(WrapInstructionArgs),
-    /// This instruction updates the priv_scan and priv_spend encrypted key
-    ///
-    /// Accounts:
-    ///
-    /// | index | writable | signer | description                                                              |
-    /// |-------|----------|--------|--------------------------------------------------------------------------|
-    /// | 0     | ✅       | ❌     | `profile_info`: PDA of Krypton Program                                  |
-    /// | 1     | ❌       | ✅     | `authority_info`: Pubkey of keypair of PDA                               |
-    #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program")]
-    #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA")]
-    UpdateSecret(UpdateSecretArgs),
     /// This instruction adds a Pubkey that will act as a guardian during recovery of the wallet
     ///
     /// Accounts:
