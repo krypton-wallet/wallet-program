@@ -37,6 +37,17 @@ const run = async () => {
   });
 
   console.log("txSig", txSig);
+  await connection.confirmTransaction(txSig);
+
+  // inspect profile
+  const profileAccount = await connection.getAccountInfo(profileAddress);
+
+  if (profileAccount) {
+    const profile = krypton.ProfileHeader.fromAccountInfo(profileAccount);
+    console.log(profile);
+  } else {
+    console.log("profile not found");
+  }
 };
 
 run().then(() => console.log("done"));
