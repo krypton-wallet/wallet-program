@@ -440,7 +440,7 @@ impl Processor {
                         .position(|guardian| guardian.pubkey == *guardian_info.key);
 
                     // ensure guardian is present
-                    if !idx.is_none() {
+                    if idx.is_none() {
                         return Err(KryptonError::GuardianNotFound.into());
                     }
 
