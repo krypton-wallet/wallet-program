@@ -161,35 +161,6 @@
       }
     },
     {
-      "name": "UpdateSecret",
-      "accounts": [
-        {
-          "name": "profileInfo",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "PDA of Krypton Program"
-        },
-        {
-          "name": "authorityInfo",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Pubkey of keypair of PDA"
-        }
-      ],
-      "args": [
-        {
-          "name": "updateSecretArgs",
-          "type": {
-            "defined": "UpdateSecretArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 4
-      }
-    },
-    {
       "name": "AddRecoveryGuardians",
       "accounts": [
         {
@@ -221,7 +192,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 5
+        "value": 4
       }
     },
     {
@@ -256,7 +227,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 6
+        "value": 5
       }
     },
     {
@@ -285,7 +256,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 7
+        "value": 6
       }
     },
     {
@@ -325,7 +296,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 8
+        "value": 7
       }
     },
     {
@@ -359,7 +330,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 9
+        "value": 8
       }
     },
     {
@@ -411,7 +382,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 10
+        "value": 9
       }
     },
     {
@@ -445,7 +416,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 11
+        "value": 10
       }
     }
   ],
@@ -475,14 +446,6 @@
             }
           },
           {
-            "name": "privScan",
-            "type": "bytes"
-          },
-          {
-            "name": "privSpend",
-            "type": "bytes"
-          },
-          {
             "name": "recovery",
             "type": "publicKey"
           }
@@ -499,14 +462,6 @@
           {
             "name": "recoveryThreshold",
             "type": "u8"
-          },
-          {
-            "name": "privScan",
-            "type": "bytes"
-          },
-          {
-            "name": "privSpend",
-            "type": "bytes"
           }
         ]
       }
@@ -546,22 +501,6 @@
           },
           {
             "name": "customData",
-            "type": "bytes"
-          }
-        ]
-      }
-    },
-    {
-      "name": "UpdateSecretArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "privScan",
-            "type": "bytes"
-          },
-          {
-            "name": "privSpend",
             "type": "bytes"
           }
         ]
@@ -611,10 +550,6 @@
           {
             "name": "pubkey",
             "type": "publicKey"
-          },
-          {
-            "name": "shardIdx",
-            "type": "u8"
           },
           {
             "name": "hasSigned",

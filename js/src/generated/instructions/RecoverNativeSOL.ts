@@ -34,7 +34,7 @@ export type RecoverNativeSOLInstructionAccounts = {
   newAuthorityInfo: web3.PublicKey
 }
 
-export const recoverNativeSOLInstructionDiscriminator = 11
+export const recoverNativeSOLInstructionDiscriminator = 10
 
 /**
  * Creates a _RecoverNativeSOL_ instruction.

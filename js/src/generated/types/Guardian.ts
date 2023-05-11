@@ -10,7 +10,6 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
 import * as beet from '@metaplex-foundation/beet'
 export type Guardian = {
   pubkey: web3.PublicKey
-  shardIdx: number
   hasSigned: boolean
 }
 
@@ -21,7 +20,6 @@ export type Guardian = {
 export const guardianBeet = new beet.BeetArgsStruct<Guardian>(
   [
     ['pubkey', beetSolana.publicKey],
-    ['shardIdx', beet.u8],
     ['hasSigned', beet.bool],
   ],
   'Guardian'

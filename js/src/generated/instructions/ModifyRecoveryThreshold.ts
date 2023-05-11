@@ -50,7 +50,7 @@ export type ModifyRecoveryThresholdInstructionAccounts = {
   authorityInfo: web3.PublicKey
 }
 
-export const modifyRecoveryThresholdInstructionDiscriminator = 7
+export const modifyRecoveryThresholdInstructionDiscriminator = 6
 
 /**
  * Creates a _ModifyRecoveryThreshold_ instruction.

@@ -8,8 +8,6 @@
 import * as beet from '@metaplex-foundation/beet'
 export type InitializeWalletArgs = {
   recoveryThreshold: number
-  privScan: Uint8Array
-  privSpend: Uint8Array
 }
 
 /**
@@ -17,11 +15,7 @@ export type InitializeWalletArgs = {
  * @category generated
  */
 export const initializeWalletArgsBeet =
-  new beet.FixableBeetArgsStruct<InitializeWalletArgs>(
-    [
-      ['recoveryThreshold', beet.u8],
-      ['privScan', beet.bytes],
-      ['privSpend', beet.bytes],
-    ],
+  new beet.BeetArgsStruct<InitializeWalletArgs>(
+    [['recoveryThreshold', beet.u8]],
     'InitializeWalletArgs'
   )

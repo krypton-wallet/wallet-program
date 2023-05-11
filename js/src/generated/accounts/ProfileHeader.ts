@@ -19,8 +19,6 @@ export type ProfileHeaderArgs = {
   authority: web3.PublicKey
   recoveryThreshold: number
   guardians: Guardian[] /* size: 10 */
-  privScan: Uint8Array
-  privSpend: Uint8Array
   recovery: web3.PublicKey
 }
 /**
@@ -35,8 +33,6 @@ export class ProfileHeader implements ProfileHeaderArgs {
     readonly authority: web3.PublicKey,
     readonly recoveryThreshold: number,
     readonly guardians: Guardian[] /* size: 10 */,
-    readonly privScan: Uint8Array,
-    readonly privSpend: Uint8Array,
     readonly recovery: web3.PublicKey
   ) {}
 
@@ -48,8 +44,6 @@ export class ProfileHeader implements ProfileHeaderArgs {
       args.authority,
       args.recoveryThreshold,
       args.guardians,
-      args.privScan,
-      args.privSpend,
       args.recovery
     )
   }
@@ -118,33 +112,34 @@ export class ProfileHeader implements ProfileHeaderArgs {
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link ProfileHeader} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link ProfileHeader}
    */
-  static byteSize(args: ProfileHeaderArgs) {
-    const instance = ProfileHeader.fromArgs(args)
-    return profileHeaderBeet.toFixedFromValue(instance).byteSize
+  static get byteSize() {
+    return profileHeaderBeet.byteSize
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link ProfileHeader} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: ProfileHeaderArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      ProfileHeader.byteSize(args),
+      ProfileHeader.byteSize,
       commitment
     )
+  }
+
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link ProfileHeader} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === ProfileHeader.byteSize
   }
 
   /**
@@ -156,8 +151,6 @@ export class ProfileHeader implements ProfileHeaderArgs {
       authority: this.authority.toBase58(),
       recoveryThreshold: this.recoveryThreshold,
       guardians: this.guardians,
-      privScan: this.privScan,
-      privSpend: this.privSpend,
       recovery: this.recovery.toBase58(),
     }
   }
@@ -167,7 +160,7 @@ export class ProfileHeader implements ProfileHeaderArgs {
  * @category Accounts
  * @category generated
  */
-export const profileHeaderBeet = new beet.FixableBeetStruct<
+export const profileHeaderBeet = new beet.BeetStruct<
   ProfileHeader,
   ProfileHeaderArgs
 >(
@@ -175,8 +168,6 @@ export const profileHeaderBeet = new beet.FixableBeetStruct<
     ['authority', beetSolana.publicKey],
     ['recoveryThreshold', beet.u8],
     ['guardians', beet.uniformFixedSizeArray(guardianBeet, 10)],
-    ['privScan', beet.bytes],
-    ['privSpend', beet.bytes],
     ['recovery', beetSolana.publicKey],
   ],
   ProfileHeader.fromArgs,

@@ -371,22 +371,6 @@ impl Processor {
                 msg!("old guardian count: {}", guardian_count);
                 msg!("old guardian list: {:?}", profile_data.guardians);
 
-                // find shard idxs to assign to new guardians
-                let used_shard_idxs = profile_data
-                    .guardians
-                    .into_iter()
-                    .filter(|guardian| guardian.pubkey != Pubkey::default())
-                    .map(|guardian| guardian.shard_idx);
-                let mut shard_idxs = Vec::with_capacity(args.num_guardians as usize);
-                for i in 0..MAX_GUARDIANS {
-                    if !used_shard_idxs.clone().any(|idx| idx == i) {
-                        shard_idxs.push(i);
-                        if shard_idxs.len() == args.num_guardians as usize {
-                            break;
-                        }
-                    }
-                }
-
                 // add new guardian(s)
                 for i in 0..args.num_guardians {
                     let guardian_account_info = next_account_info(account_info_iter)?;
@@ -397,7 +381,6 @@ impl Processor {
                     );
                     let new_guardian = Guardian {
                         pubkey: *guardian_account_info.key,
-                        shard_idx: shard_idxs[i as usize],
                         has_signed: false,
                     };
                     profile_data.guardians[guardian_count + i as usize] = new_guardian;

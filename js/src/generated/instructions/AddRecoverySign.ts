@@ -36,7 +36,7 @@ export type AddRecoverySignInstructionAccounts = {
   guardianInfo: web3.PublicKey
 }
 
-export const addRecoverySignInstructionDiscriminator = 8
+export const addRecoverySignInstructionDiscriminator = 7
 
 /**
  * Creates a _AddRecoverySign_ instruction.

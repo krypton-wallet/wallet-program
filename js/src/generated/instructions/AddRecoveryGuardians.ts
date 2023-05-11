@@ -52,7 +52,7 @@ export type AddRecoveryGuardiansInstructionAccounts = {
   guardian: web3.PublicKey
 }
 
-export const addRecoveryGuardiansInstructionDiscriminator = 5
+export const addRecoveryGuardiansInstructionDiscriminator = 4
 
 /**
  * Creates a _AddRecoveryGuardians_ instruction.

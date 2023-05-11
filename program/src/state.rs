@@ -5,21 +5,17 @@ use solana_program::pubkey::Pubkey;
 /*
     32: authority pubkey
     1: recovery_threshold
-    4: size of vector of guardians
-    340: 34 * 10 space (32: pubkey, 1: shard_idx, 1: has_signed) for 10 guardians
-    72: 36 (4 + 32) * 2 space for 2 encrypted keys
+    330: 33 * 10 space (32: pubkey, 1: has_signed) for MAX_GUARDIANS guardians
     32: recovery pubkey
 */
-pub const DATA_LEN: usize = 32 + 1 + 4 + (32 + 1 + 1) * 10 + (4 + 32) * 2 + 32;
 pub const MAX_GUARDIANS: u8 = 10;
+pub const DATA_LEN: usize = 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
 pub const PDA_SEED: &[u8] = b"profile";
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy)]
 pub struct Guardian {
     /// Pubkey of guardian
     pub pubkey: Pubkey,
-    /// shard idx assigned to guardian
-    pub shard_idx: u8,
     /// flag to determine if guardian signed for recovery
     pub has_signed: bool,
 }
@@ -28,7 +24,6 @@ impl Default for Guardian {
     fn default() -> Self {
         Self {
             pubkey: Pubkey::default(),
-            shard_idx: MAX_GUARDIANS + 1,
             has_signed: false,
         }
     }

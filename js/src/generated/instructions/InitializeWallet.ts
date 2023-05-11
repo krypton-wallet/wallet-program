@@ -25,7 +25,7 @@ export type InitializeWalletInstructionArgs = {
  * @category InitializeWallet
  * @category generated
  */
-export const InitializeWalletStruct = new beet.FixableBeetArgsStruct<
+export const InitializeWalletStruct = new beet.BeetArgsStruct<
   InitializeWalletInstructionArgs & {
     instructionDiscriminator: number
   }
