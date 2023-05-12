@@ -535,7 +535,7 @@ impl Processor {
 
                 // if new recovery, then update recovery and unset other guardian signatures
                 if *new_profile_info.key != profile_data.recovery {
-                    msg!("new recovery: {:?}", new_authority_info.key.to_bytes());
+                    msg!("new recovery: {:?}", new_authority_info.key);
                     profile_data.recovery = *new_profile_info.key;
                     for guardian in profile_data.guardians.iter_mut() {
                         guardian.has_signed = false;
@@ -549,7 +549,7 @@ impl Processor {
                     .position(|guardian| guardian.pubkey == *guardian_info.key);
 
                 // ensure guardian is present
-                if !idx.is_none() {
+                if idx.is_none() {
                     return Err(KryptonError::GuardianNotFound.into());
                 }
 
