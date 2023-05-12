@@ -375,9 +375,9 @@ impl Processor {
                 for i in 0..args.num_guardians {
                     let guardian_account_info = next_account_info(account_info_iter)?;
                     msg!(
-                        "newly added guardian {}: {:x?}",
+                        "newly added guardian {}: {:?}",
                         i,
-                        guardian_account_info.key.to_bytes()
+                        guardian_account_info.key
                     );
                     let new_guardian = Guardian {
                         pubkey: *guardian_account_info.key,
@@ -440,12 +440,12 @@ impl Processor {
                         .position(|guardian| guardian.pubkey == *guardian_info.key);
 
                     // ensure guardian is present
-                    if !idx.is_none() {
+                    if idx.is_none() {
                         return Err(KryptonError::GuardianNotFound.into());
                     }
 
                     guardians.remove(idx.unwrap());
-                    msg!("deleted guardian {:x?}", guardian_info.key.to_bytes());
+                    msg!("deleted guardian {:?}", guardian_info.key);
                 }
 
                 msg!("new guardian list: {:?}", profile_data.guardians);
