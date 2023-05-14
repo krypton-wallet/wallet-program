@@ -260,6 +260,40 @@
       }
     },
     {
+      "name": "InitializeRecovery",
+      "accounts": [
+        {
+          "name": "profileInfo",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of Krypton Program to be recovered"
+        },
+        {
+          "name": "authorityInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Pubkey of keypair of PDA to be recovered"
+        },
+        {
+          "name": "newProfileInfo",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to be recovered into"
+        },
+        {
+          "name": "newAuthorityInfo",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Pubkey of the keypair to be recovered into"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
       "name": "AddRecoverySign",
       "accounts": [
         {
@@ -296,7 +330,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 7
+        "value": 8
       }
     },
     {
@@ -330,7 +364,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 8
+        "value": 9
       }
     },
     {
@@ -382,7 +416,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 9
+        "value": 10
       }
     },
     {
@@ -416,7 +450,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 10
+        "value": 11
       }
     }
   ],
@@ -617,16 +651,21 @@
     },
     {
       "code": 11,
+      "name": "InvalidRecovery",
+      "msg": "The account used to recover is invalid"
+    },
+    {
+      "code": 12,
       "name": "NotAuthorizedToRecover",
       "msg": "The pubkey is not authorized to recover the wallet"
     },
     {
-      "code": 12,
+      "code": 13,
       "name": "InsufficientFundsForTransaction",
       "msg": "There is insufficient SOL to transfer"
     },
     {
-      "code": 13,
+      "code": 14,
       "name": "Overflow",
       "msg": "Operation overflowed"
     }

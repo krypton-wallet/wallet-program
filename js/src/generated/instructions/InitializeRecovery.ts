@@ -10,46 +10,46 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category RecoverNativeSOL
+ * @category InitializeRecovery
  * @category generated
  */
-export const RecoverNativeSOLStruct = new beet.BeetArgsStruct<{
+export const InitializeRecoveryStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number
-}>([['instructionDiscriminator', beet.u8]], 'RecoverNativeSOLInstructionArgs')
+}>([['instructionDiscriminator', beet.u8]], 'InitializeRecoveryInstructionArgs')
 /**
- * Accounts required by the _RecoverNativeSOL_ instruction
+ * Accounts required by the _InitializeRecovery_ instruction
  *
  * @property [_writable_] profileInfo PDA of Krypton Program to be recovered
  * @property [] authorityInfo Pubkey of keypair of PDA to be recovered
- * @property [_writable_] newProfileInfo PDA to be recovered into
+ * @property [] newProfileInfo PDA to be recovered into
  * @property [**signer**] newAuthorityInfo Pubkey of the keypair to be recovered into
  * @category Instructions
- * @category RecoverNativeSOL
+ * @category InitializeRecovery
  * @category generated
  */
-export type RecoverNativeSOLInstructionAccounts = {
+export type InitializeRecoveryInstructionAccounts = {
   profileInfo: web3.PublicKey
   authorityInfo: web3.PublicKey
   newProfileInfo: web3.PublicKey
   newAuthorityInfo: web3.PublicKey
 }
 
-export const recoverNativeSOLInstructionDiscriminator = 11
+export const initializeRecoveryInstructionDiscriminator = 7
 
 /**
- * Creates a _RecoverNativeSOL_ instruction.
+ * Creates a _InitializeRecovery_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category RecoverNativeSOL
+ * @category InitializeRecovery
  * @category generated
  */
-export function createRecoverNativeSOLInstruction(
-  accounts: RecoverNativeSOLInstructionAccounts,
+export function createInitializeRecoveryInstruction(
+  accounts: InitializeRecoveryInstructionAccounts,
   programId = new web3.PublicKey('2aJqX3GKRPAsfByeMkL7y9SqAGmCQEnakbuHJBdxGaDL')
 ) {
-  const [data] = RecoverNativeSOLStruct.serialize({
-    instructionDiscriminator: recoverNativeSOLInstructionDiscriminator,
+  const [data] = InitializeRecoveryStruct.serialize({
+    instructionDiscriminator: initializeRecoveryInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -64,7 +64,7 @@ export function createRecoverNativeSOLInstruction(
     },
     {
       pubkey: accounts.newProfileInfo,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

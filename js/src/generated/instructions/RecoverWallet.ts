@@ -34,7 +34,7 @@ export type RecoverWalletInstructionAccounts = {
   newAuthorityInfo: web3.PublicKey
 }
 
-export const recoverWalletInstructionDiscriminator = 8
+export const recoverWalletInstructionDiscriminator = 9
 
 /**
  * Creates a _RecoverWallet_ instruction.

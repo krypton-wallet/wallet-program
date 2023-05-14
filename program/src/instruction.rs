@@ -148,6 +148,21 @@ pub enum KryptonInstruction {
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program")]
     #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA")]
     ModifyRecoveryThreshold(ModifyRecoveryThresholdArgs),
+    /// This instruction initializes the recovery of the wallet into the new PDA
+    ///
+    /// Accounts:
+    ///
+    /// | index | writable | signer | description                                                              |
+    /// |-------|----------|--------|--------------------------------------------------------------------------|
+    /// | 0     | ✅       | ❌     | `profile_info`: PDA of Krypton Program to be recovered                  |
+    /// | 1     | ❌       | ❌     | `authority_info`: Pubkey of keypair of PDA to be recovered               |
+    /// | 2     | ❌       | ❌     | `new_profile_info`: PDA to be recovered into                             |
+    /// | 3     | ❌       | ✅     | `new_authority_info`: Pubkey of the keypair to be recovered into         |
+    #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program to be recovered")]
+    #[account(1, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
+    #[account(2, name = "new_profile_info", desc = "PDA to be recovered into")]
+    #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
+    InitializeRecovery,
     /// This instruction adds a guardian's signature for the recovery of the wallet into the new PDA
     ///
     /// Accounts:

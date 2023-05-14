@@ -40,7 +40,7 @@ export type RecoverTokenInstructionAccounts = {
   tokenProgram?: web3.PublicKey
 }
 
-export const recoverTokenInstructionDiscriminator = 9
+export const recoverTokenInstructionDiscriminator = 10
 
 /**
  * Creates a _RecoverToken_ instruction.

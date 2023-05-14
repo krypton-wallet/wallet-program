@@ -1,5 +1,6 @@
 export * from './AddRecoveryGuardians'
 export * from './AddRecoverySign'
+export * from './InitializeRecovery'
 export * from './InitializeWallet'
 export * from './ModifyRecoveryThreshold'
 export * from './RecoverNativeSOL'
