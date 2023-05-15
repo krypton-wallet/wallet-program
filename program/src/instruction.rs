@@ -172,12 +172,12 @@ pub enum KryptonInstruction {
     /// | 0     | ✅       | ❌     | `profile_info`: PDA of Krypton Program to be recovered                    |
     /// | 1     | ❌       | ❌     | `authority_info`: Pubkey of keypair of PDA to be recovered                 |
     /// | 2     | ❌       | ❌     | `new_profile_info`: PDA to be recovered into                               |
-    /// | 3     | ❌       | ✅     | `new_authority_info`: Pubkey of the keypair to be recovered into           |
+    /// | 3     | ❌       | ❌     | `new_authority_info`: Pubkey of the keypair to be recovered into           |
     /// | 4     | ❌       | ✅     | `guardian_info`: Pubkey of recovery guardian                               |
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program to be recovered")]
     #[account(1, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
     #[account(2, name = "new_profile_info", desc = "PDA to be recovered into")]
-    #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
+    #[account(3, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
     #[account(4, signer, name = "guardian_info", desc = "Pubkey of recovery guardian")]
     AddRecoverySign,
     /// This instruction recovers the wallet into the new PDA provided there are at least `recovery_threshold`
@@ -219,8 +219,7 @@ pub enum KryptonInstruction {
     #[account(6, name = "token_program", desc = "Used to transfer token")]
     RecoverToken,
     /// This instruction recovers all the native SOL from the old wallet into the new PDA provided there
-    /// are at least `recovery_threshold`
-    /// guardian signatures for the recovery
+    /// are at least `recovery_threshold` guardian signatures for the recovery
     ///
     /// Accounts:
     ///

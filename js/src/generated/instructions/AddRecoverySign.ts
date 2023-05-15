@@ -22,7 +22,7 @@ export const AddRecoverySignStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] profileInfo PDA of Krypton Program to be recovered
  * @property [] authorityInfo Pubkey of keypair of PDA to be recovered
  * @property [] newProfileInfo PDA to be recovered into
- * @property [**signer**] newAuthorityInfo Pubkey of the keypair to be recovered into
+ * @property [] newAuthorityInfo Pubkey of the keypair to be recovered into
  * @property [**signer**] guardianInfo Pubkey of recovery guardian
  * @category Instructions
  * @category AddRecoverySign
@@ -72,7 +72,7 @@ export function createAddRecoverySignInstruction(
     {
       pubkey: accounts.newAuthorityInfo,
       isWritable: false,
-      isSigner: true,
+      isSigner: false,
     },
     {
       pubkey: accounts.guardianInfo,

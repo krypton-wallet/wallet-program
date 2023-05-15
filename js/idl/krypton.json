@@ -317,7 +317,7 @@
         {
           "name": "newAuthorityInfo",
           "isMut": false,
-          "isSigner": true,
+          "isSigner": false,
           "desc": "Pubkey of the keypair to be recovered into"
         },
         {
@@ -651,21 +651,16 @@
     },
     {
       "code": 11,
-      "name": "InvalidRecovery",
-      "msg": "The account used to recover is invalid"
-    },
-    {
-      "code": 12,
       "name": "NotAuthorizedToRecover",
       "msg": "The pubkey is not authorized to recover the wallet"
     },
     {
-      "code": 13,
+      "code": 12,
       "name": "InsufficientFundsForTransaction",
       "msg": "There is insufficient SOL to transfer"
     },
     {
-      "code": 14,
+      "code": 13,
       "name": "Overflow",
       "msg": "Operation overflowed"
     }

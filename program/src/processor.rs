@@ -554,8 +554,8 @@ impl Processor {
                 let new_authority_info = next_account_info(account_info_iter)?;
                 let guardian_info = next_account_info(account_info_iter)?;
 
-                // ensure new_authority_info and guardian_info are signer
-                if !new_authority_info.is_signer || !guardian_info.is_signer {
+                // ensure guardian_info is signer
+                if !guardian_info.is_signer {
                     return Err(KryptonError::NotSigner.into());
                 }
 
@@ -581,9 +581,9 @@ impl Processor {
                 let mut profile_data =
                     ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
 
-                // ensure recovery is valid
-                if *new_profile_info.key != profile_data.recovery {
-                    return Err(KryptonError::InvalidRecovery.into());
+                // ensure recovery is happening for new_profile_info
+                if profile_data.recovery != *new_profile_info.key {
+                    return Err(KryptonError::NotAuthorizedToRecover.into());
                 }
 
                 // get index of signing guardian key
