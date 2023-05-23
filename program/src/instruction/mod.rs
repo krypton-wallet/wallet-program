@@ -1,7 +1,8 @@
+pub mod initialize_wallet;
+pub mod transfer_token;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
-use solana_program::pubkey::Pubkey;
-// use solana_program::example_mocks::solana_sdk::account;
 
 #[derive(Clone, BorshSerialize, BorshDeserialize)]
 pub struct InitializeWalletArgs {
