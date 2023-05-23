@@ -21,7 +21,6 @@ pub fn process_transfer_token(
     args: TransferTokenArgs,
 ) -> ProgramResult {
     let mut account_info_iter = accounts.into_iter();
-    msg!("Instruction: TransferToken");
 
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;

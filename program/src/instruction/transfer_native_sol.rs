@@ -16,7 +16,6 @@ pub fn process_transfer_native_sol(
     args: TransferNativeSOLArgs,
 ) -> ProgramResult {
     let mut account_info_iter = accounts.into_iter();
-    msg!("Instruction: TransferNativeSOL");
 
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;

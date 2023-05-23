@@ -1,3 +1,7 @@
+use crate::{
+    error::KryptonError,
+    state::{get_profile_pda, Guardian, ProfileHeader, MAX_GUARDIANS},
+};
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -7,21 +11,14 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{
-    error::KryptonError,
-    state::{get_profile_pda, Guardian, ProfileHeader, MAX_GUARDIANS},
-};
+use super::RemoveRecoveryGuardianArgs;
 
-use super::AddRecoveryGuardianArgs;
-
-pub fn process_add_recovery_guardian(
+pub fn process_remove_recovery_guardians(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    args: AddRecoveryGuardianArgs,
+    args: RemoveRecoveryGuardianArgs,
 ) -> ProgramResult {
     let mut account_info_iter = accounts.into_iter();
-    msg!("Instruction: AddRecoveryGuardians");
-
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
 
@@ -40,7 +37,6 @@ pub fn process_add_recovery_guardian(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    // ensure profile_info PDA corresponds to authority_info
     let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
     if profile_pda != *profile_info.key {
         return Err(ProgramError::InvalidSeeds);
@@ -50,40 +46,34 @@ pub fn process_add_recovery_guardian(
 
     let mut profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
 
-    // assert that total number of guardians are less than or equal to MAX_GUARDIANS
-    let guardian_count = profile_data
-        .guardians
-        .into_iter()
-        .filter(|guardian| guardian.pubkey != Pubkey::default())
-        .count();
-    if (guardian_count as u8 + args.num_guardians) > MAX_GUARDIANS {
-        return Err(KryptonError::TooManyGuardians.into());
-    }
-
-    msg!("old guardian count: {}", guardian_count);
     msg!("old guardian list: {:?}", profile_data.guardians);
 
-    // add new guardian(s)
-    for i in 0..args.num_guardians {
-        let guardian_account_info = next_account_info(&mut account_info_iter)?;
-        msg!(
-            "newly added guardian {}: {:?}",
-            i,
-            guardian_account_info.key
-        );
-        let new_guardian = Guardian {
-            pubkey: *guardian_account_info.key,
-            has_signed: false,
-        };
-        profile_data.guardians[guardian_count + i as usize] = new_guardian;
+    // delete guardian(s)
+    let mut guardians: Vec<Guardian> = profile_data.guardians.into_iter().collect();
+    for _ in 0..args.num_guardians {
+        let guardian_info = next_account_info(&mut account_info_iter)?;
+
+        // get index of guardian key to be deleted
+        let idx = guardians
+            .iter()
+            .position(|guardian| guardian.pubkey == *guardian_info.key);
+
+        // ensure guardian is present
+        if idx.is_none() {
+            return Err(KryptonError::GuardianNotFound.into());
+        }
+
+        guardians.remove(idx.unwrap());
+        msg!("deleted guardian {:?}", guardian_info.key);
     }
 
-    msg!(
-        "new guardian count: {}",
-        guardian_count + args.num_guardians as usize
-    );
     msg!("new guardian list: {:?}", profile_data.guardians);
 
+    while guardians.len() < MAX_GUARDIANS as usize {
+        guardians.push(Guardian::default());
+    }
+
+    profile_data.guardians = guardians.try_into().unwrap();
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
 
     Ok(())

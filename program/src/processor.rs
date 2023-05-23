@@ -16,12 +16,10 @@ use spl_token::{
 use crate::{
     error::KryptonError,
     instruction::{
-        add_recovery_guardian, initialize_wallet, transfer_native_sol, transfer_token,
-        wrap_instruction, KryptonInstruction,
+        add_recovery_guardians, initialize_wallet, remove_recovery_guardians, transfer_native_sol,
+        transfer_token, wrap_instruction, KryptonInstruction, modify_recovery_threshold,
     },
-    state::{
-        get_profile_pda, verify_recovery_state, Guardian, ProfileHeader, MAX_GUARDIANS, PDA_SEED,
-    },
+    state::{get_profile_pda, verify_recovery_state, ProfileHeader, MAX_GUARDIANS, PDA_SEED},
 };
 
 pub struct Processor {}
@@ -39,120 +37,34 @@ impl Processor {
 
         match instruction {
             KryptonInstruction::InitializeWallet(args) => {
+                msg!("Instruction: InitializeWallet");
                 initialize_wallet::process_initialize_wallet(program_id, accounts, args)
             }
             KryptonInstruction::TransferToken(args) => {
+                msg!("Instruction: TransferToken");
                 transfer_token::process_transfer_token(program_id, accounts, args)
             }
             KryptonInstruction::TransferNativeSOL(args) => {
+                msg!("Instruction: TransferNativeSol");
                 transfer_native_sol::process_transfer_native_sol(program_id, accounts, args)
             }
             KryptonInstruction::WrapInstruction(args) => {
+                msg!("Instruction: WrapInstruction");
                 wrap_instruction::process_wrap_instruction(program_id, accounts, args)
             }
             KryptonInstruction::AddRecoveryGuardians(args) => {
-                add_recovery_guardian::process_add_recovery_guardian(program_id, accounts, args)
+                msg!("Instruction: AddRecoveryGuardians");
+                add_recovery_guardians::process_add_recovery_guardians(program_id, accounts, args)
             }
             KryptonInstruction::RemoveRecoveryGuardians(args) => {
-                msg!("Instruction: DeleteRecoveryGuardians");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-
-                // ensure the specified amount of guardians are passed in
-                if (args.num_guardians + 2) < accounts.len() as u8 {
-                    return Err(KryptonError::NotEnoughGuardians.into());
-                }
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                msg!("old guardian list: {:?}", profile_data.guardians);
-
-                // delete guardian(s)
-                let mut guardians: Vec<Guardian> = profile_data.guardians.into_iter().collect();
-                for _ in 0..args.num_guardians {
-                    let guardian_info = next_account_info(account_info_iter)?;
-
-                    // get index of guardian key to be deleted
-                    let idx = guardians
-                        .iter()
-                        .position(|guardian| guardian.pubkey == *guardian_info.key);
-
-                    // ensure guardian is present
-                    if idx.is_none() {
-                        return Err(KryptonError::GuardianNotFound.into());
-                    }
-
-                    guardians.remove(idx.unwrap());
-                    msg!("deleted guardian {:?}", guardian_info.key);
-                }
-
-                msg!("new guardian list: {:?}", profile_data.guardians);
-
-                while guardians.len() < MAX_GUARDIANS as usize {
-                    guardians.push(Guardian::default());
-                }
-
-                profile_data.guardians = guardians.try_into().unwrap();
-                profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
-
-                Ok(())
+                msg!("Instruction: RemoveRecoveryGuardians");
+                remove_recovery_guardians::process_remove_recovery_guardians(
+                    program_id, accounts, args,
+                )
             }
             KryptonInstruction::ModifyRecoveryThreshold(args) => {
                 msg!("Instruction: ModifyRecoveryThreshold");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-
-                // ensure the new threshold is valid
-                if args.new_threshold > MAX_GUARDIANS || args.new_threshold == 0 {
-                    return Err(KryptonError::InvalidRecoveryThreshold.into());
-                }
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                // update the recovery threshold
-                profile_data.recovery_threshold = args.new_threshold;
-                profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
-
-                Ok(())
+                modify_recovery_threshold::process_modify_recovery_threshold(program_id, accounts, args)
             }
             KryptonInstruction::InitializeRecovery => {
                 msg!("Instruction: InitializeRecovery");
