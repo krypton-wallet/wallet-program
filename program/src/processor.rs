@@ -2,14 +2,11 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     msg,
     program::invoke_signed,
     program_error::ProgramError,
     program_pack::Pack,
     pubkey::Pubkey,
-    system_instruction::assign,
-    system_program::check_id,
 };
 use spl_token::{
     instruction::{close_account, transfer},
@@ -18,12 +15,13 @@ use spl_token::{
 
 use crate::{
     error::KryptonError,
-    instruction::transfer_token,
-    state::{get_profile_pda, verify_recovery_state, ProfileHeader},
-};
-use crate::{
-    instruction::{initialize_wallet, KryptonInstruction},
-    state::{Guardian, DATA_LEN, MAX_GUARDIANS, PDA_SEED},
+    instruction::{
+        add_recovery_guardian, initialize_wallet, transfer_native_sol, transfer_token,
+        wrap_instruction, KryptonInstruction,
+    },
+    state::{
+        get_profile_pda, verify_recovery_state, Guardian, ProfileHeader, MAX_GUARDIANS, PDA_SEED,
+    },
 };
 
 pub struct Processor {}
@@ -47,212 +45,13 @@ impl Processor {
                 transfer_token::process_transfer_token(program_id, accounts, args)
             }
             KryptonInstruction::TransferNativeSOL(args) => {
-                msg!("Instruction: TransferNativeSOL");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-                let dest = next_account_info(account_info_iter)?;
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                // ensure there is enough SOL to transfer
-                if **profile_info.try_borrow_lamports()? < args.amount {
-                    return Err(ProgramError::InsufficientFunds.into());
-                }
-
-                // debit profile_info and credit dest
-                **profile_info.try_borrow_mut_lamports()? -= args.amount;
-                **dest.try_borrow_mut_lamports()? += args.amount;
-
-                msg!("amount: {}", args.amount);
-
-                Ok(())
+                transfer_native_sol::process_transfer_native_sol(program_id, accounts, args)
             }
             KryptonInstruction::WrapInstruction(args) => {
-                msg!("Instruction: WrapInstruction");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-                let custom_program = next_account_info(account_info_iter)?;
-
-                // ensure the specified amount of accounts are passed in
-                if (args.num_accounts + 3) < accounts.len() as u8 {
-                    return Err(KryptonError::NotEnoughAccounts.into());
-                }
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, bump_seed) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                // make a copy of PDA data
-                let mut old_data: [u8; DATA_LEN] = [0; DATA_LEN];
-                old_data.copy_from_slice(&profile_info.data.borrow()[..]);
-
-                // check if custom_program is system_program
-                let mut system_program: Option<&AccountInfo> = None;
-                if check_id(custom_program.key) {
-                    system_program = Some(custom_program);
-                }
-
-                let mut custom_infos = Vec::with_capacity(args.num_accounts as usize);
-                let mut custom_metas = Vec::with_capacity(args.num_accounts as usize);
-                for _ in 0..args.num_accounts {
-                    // populate custom_infos
-                    let custom_account_info = next_account_info(account_info_iter)?;
-                    custom_infos.push(custom_account_info.clone());
-
-                    // check if any passed in account is system_program
-                    if check_id(custom_account_info.key) {
-                        system_program = Some(custom_account_info);
-                    }
-
-                    // populate custom_metas
-                    let new_meta = if profile_pda == *custom_account_info.key {
-                        AccountMeta::new(*custom_account_info.key, true)
-                    } else if custom_account_info.is_writable {
-                        AccountMeta::new(*custom_account_info.key, custom_account_info.is_signer)
-                    } else {
-                        AccountMeta::new_readonly(
-                            *custom_account_info.key,
-                            custom_account_info.is_signer,
-                        )
-                    };
-                    custom_metas.push(new_meta);
-                }
-
-                // system_program is present so assign PDA to be system-owned
-                if system_program.is_some() {
-                    profile_info.realloc(0, false)?;
-                    profile_info.assign(&solana_program::system_program::ID);
-                }
-
-                // call CPI instruction
-                msg!("data: {:?}", args.custom_data);
-                let instr = Instruction::new_with_bytes(
-                    *custom_program.key,
-                    args.custom_data.as_slice(),
-                    custom_metas,
-                );
-                invoke_signed(
-                    &instr,
-                    custom_infos.as_slice(),
-                    &[&[PDA_SEED, authority_info.key.as_ref(), &[bump_seed]]],
-                )?;
-                msg!("invoked_signed!");
-
-                // system_program is present so reassign PDA to KryptonProgram
-                if system_program.is_some() {
-                    let assign_ix = assign(&profile_pda, &program_id);
-                    invoke_signed(
-                        &assign_ix,
-                        &[profile_info.clone(), system_program.unwrap().clone()],
-                        &[&[PDA_SEED, authority_info.key.as_ref(), &[bump_seed]]],
-                    )?;
-                    profile_info.realloc(DATA_LEN, false)?;
-                    profile_info.data.borrow_mut()[..].copy_from_slice(&old_data);
-                }
-
-                Ok(())
+                wrap_instruction::process_wrap_instruction(program_id, accounts, args)
             }
             KryptonInstruction::AddRecoveryGuardians(args) => {
-                msg!("Instruction: AddRecoveryGuardians");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-
-                // ensure the specified amount of guardians are passed in
-                if (args.num_guardians + 2) < accounts.len() as u8 {
-                    return Err(KryptonError::NotEnoughGuardians.into());
-                }
-
-                // ensure authority_info is signer
-                if !authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                // assert that total number of guardians are less than or equal to MAX_GUARDIANS
-                let guardian_count = profile_data
-                    .guardians
-                    .into_iter()
-                    .filter(|guardian| guardian.pubkey != Pubkey::default())
-                    .count();
-                if (guardian_count as u8 + args.num_guardians) > MAX_GUARDIANS {
-                    return Err(KryptonError::TooManyGuardians.into());
-                }
-
-                msg!("old guardian count: {}", guardian_count);
-                msg!("old guardian list: {:?}", profile_data.guardians);
-
-                // add new guardian(s)
-                for i in 0..args.num_guardians {
-                    let guardian_account_info = next_account_info(account_info_iter)?;
-                    msg!(
-                        "newly added guardian {}: {:?}",
-                        i,
-                        guardian_account_info.key
-                    );
-                    let new_guardian = Guardian {
-                        pubkey: *guardian_account_info.key,
-                        has_signed: false,
-                    };
-                    profile_data.guardians[guardian_count + i as usize] = new_guardian;
-                }
-
-                msg!(
-                    "new guardian count: {}",
-                    guardian_count + args.num_guardians as usize
-                );
-                msg!("new guardian list: {:?}", profile_data.guardians);
-
-                profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
-
-                Ok(())
+                add_recovery_guardian::process_add_recovery_guardian(program_id, accounts, args)
             }
             KryptonInstruction::RemoveRecoveryGuardians(args) => {
                 msg!("Instruction: DeleteRecoveryGuardians");

@@ -1,5 +1,8 @@
+pub mod add_recovery_guardian;
 pub mod initialize_wallet;
+pub mod transfer_native_sol;
 pub mod transfer_token;
+pub mod wrap_instruction;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
