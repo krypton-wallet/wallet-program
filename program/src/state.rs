@@ -12,21 +12,12 @@ pub const MAX_GUARDIANS: u8 = 10;
 pub const DATA_LEN: usize = 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
 pub const PDA_SEED: &[u8] = b"profile";
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy, Default)]
 pub struct Guardian {
     /// Pubkey of guardian
     pub pubkey: Pubkey,
     /// flag to determine if guardian signed for recovery
     pub has_signed: bool,
-}
-
-impl Default for Guardian {
-    fn default() -> Self {
-        Self {
-            pubkey: Pubkey::default(),
-            has_signed: false,
-        }
-    }
 }
 
 /// Returns associated profile PDA for data_account PubKey

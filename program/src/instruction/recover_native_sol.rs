@@ -1,6 +1,6 @@
 use crate::{prelude::*, state::verify_recovery_state};
 
-pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_recover_native_sol(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut account_info_iter = accounts.iter();
 
     let profile_info = next_account_info(&mut account_info_iter)?;
@@ -13,8 +13,8 @@ pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
         return Err(KryptonError::NotSigner.into());
     }
 
-    // ensure new_profile_info is writable
-    if !new_profile_info.is_writable {
+    // ensure profile_info and new_profile_info are writable
+    if !profile_info.is_writable || !new_profile_info.is_writable {
         return Err(KryptonError::NotWriteable.into());
     }
 
@@ -31,8 +31,6 @@ pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
     }
 
     msg!("checks complete");
-    msg!("old Profile PDA: {}", profile_pda);
-    msg!("new Profile PDA: {}", new_profile_pda);
 
     let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
 
@@ -48,8 +46,15 @@ pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
 
     msg!("recovery checks complete");
 
-    // copy over data to new_profile_info
-    profile_data.serialize(&mut &mut new_profile_info.try_borrow_mut_data()?[..])?;
+    // transfer all the lamports from profile_info to new_profile_info
+    let balance = profile_info.lamports();
+    **new_profile_info.try_borrow_mut_lamports()? = balance
+        .checked_add(new_profile_info.lamports())
+        .ok_or(KryptonError::Overflow)?;
+    **profile_info.try_borrow_mut_lamports()? = 0;
+    profile_info.data.borrow_mut().fill(0);
+
+    msg!("amount: {}", balance);
 
     Ok(())
 }

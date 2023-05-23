@@ -22,7 +22,7 @@ pub fn process_wrap_instruction(
     accounts: &[AccountInfo],
     args: WrapInstructionArgs,
 ) -> ProgramResult {
-    let mut account_info_iter = accounts.into_iter();
+    let mut account_info_iter = accounts.iter();
     msg!("Instruction: WrapInstruction");
 
     let profile_info = next_account_info(&mut account_info_iter)?;
@@ -107,7 +107,7 @@ pub fn process_wrap_instruction(
 
     // system_program is present so reassign PDA to KryptonProgram
     if system_program.is_some() {
-        let assign_ix = assign(&profile_pda, &program_id);
+        let assign_ix = assign(&profile_pda, program_id);
         invoke_signed(
             &assign_ix,
             &[profile_info.clone(), system_program.unwrap().clone()],

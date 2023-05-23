@@ -15,7 +15,7 @@ pub fn process_transfer_native_sol(
     accounts: &[AccountInfo],
     args: TransferNativeSOLArgs,
 ) -> ProgramResult {
-    let mut account_info_iter = accounts.into_iter();
+    let mut account_info_iter = accounts.iter();
 
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
@@ -41,7 +41,7 @@ pub fn process_transfer_native_sol(
 
     // ensure there is enough SOL to transfer
     if **profile_info.try_borrow_lamports()? < args.amount {
-        return Err(ProgramError::InsufficientFunds.into());
+        return Err(ProgramError::InsufficientFunds);
     }
 
     // debit profile_info and credit dest
