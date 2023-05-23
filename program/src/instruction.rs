@@ -39,21 +39,9 @@ pub struct ModifyRecoveryThresholdArgs {
     pub new_threshold: u8,
 }
 
-// #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
-// pub struct InitializeUserProfileArgs {
-//     pub keys_to_add: Vec<Pubkey>,
-//     pub recovery_threshold: u8,
-// }
-
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
 pub enum KryptonInstruction {
-    // #[account(0, writable, name="user_profile", desc="PDA of user profile")]
-    // #[account(1, signer, name="authority_info", desc="feepayer wallet / authority")]
-    // #[account(2, name="system_program", desc="the system program")]
-    // InitializeUserProfile(InitializeUserProfileArgs),
-
-
     #[account(0, writable, name="profile_info", desc="PDA of Krypton Program")]
     #[account(1, signer, name="authority_info", desc="Pubkey of keypair of PDA")]
     #[account(2, name="system_program", desc="Used to create/reassign the PDA")]
