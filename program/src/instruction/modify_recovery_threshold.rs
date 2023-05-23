@@ -6,7 +6,7 @@ pub fn process_modify_recovery_threshold(
     accounts: &[AccountInfo],
     args: ModifyRecoveryThresholdArgs,
 ) -> ProgramResult {
-    let mut account_info_iter = accounts.into_iter();
+    let mut account_info_iter = accounts.iter();
     msg!("Instruction: ModifyRecoveryThreshold");
 
     let profile_info = next_account_info(&mut account_info_iter)?;

@@ -7,7 +7,7 @@ pub fn process_add_recovery_guardians(
     accounts: &[AccountInfo],
     args: AddRecoveryGuardianArgs,
 ) -> ProgramResult {
-    let mut account_info_iter = accounts.into_iter();
+    let mut account_info_iter = accounts.iter();
 
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
