@@ -102,3 +102,7 @@ Purpose: transfer to a destination token account and break into two cases: recov
 - Transfer from src to dest token account with given amount and sign the transaction with original pda
 - Close the src token account iff recovery_mode == 1
 - Both transfer and close are signed by new feePayer
+
+### Update Secret
+
+updates the encrypted keys stored in the account

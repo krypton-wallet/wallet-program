@@ -2188,6 +2188,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "krypton"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "borsh",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "shank",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-validator",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3457,23 +3475,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "recovery"
-version = "0.1.0"
-dependencies = [
- "assert_matches",
- "borsh",
- "bytemuck",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "solana-validator",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "redox_syscall"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3968,6 +3969,52 @@ checksum = "bdf0c33fae925bdc080598b84bc15c55e7b9a4a43b3c704da051f977469691c9"
 dependencies = [
  "digest 0.10.6",
  "keccak",
+]
+
+[[package]]
+name = "shank"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "439c00542aa8b4c777750b3130ce36fcff86ba215d54006d47d67359513b70be"
+dependencies = [
+ "shank_macro",
+]
+
+[[package]]
+name = "shank_macro"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3498d6ea2ba012f26ad3d79a19773ba8e1c7a69f14dec67e3ed51c723cc9f30a"
+dependencies = [
+ "proc-macro2 1.0.50",
+ "quote 1.0.23",
+ "shank_macro_impl",
+ "shank_render",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "shank_macro_impl"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "271c0b0b47ef930d7455d11a02164e3f0e71704d639bcaa6581f23e4b2073227"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.50",
+ "quote 1.0.23",
+ "serde",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "shank_render"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "142e11124c70d1702424011209621551adf775988033dedea428ce4a21d3acdf"
+dependencies = [
+ "proc-macro2 1.0.50",
+ "quote 1.0.23",
+ "shank_macro_impl",
 ]
 
 [[package]]
