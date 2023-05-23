@@ -1,23 +1,4 @@
-use borsh::BorshSerialize;
-use solana_program::account_info::next_account_info;
-use solana_program::account_info::AccountInfo;
-use solana_program::entrypoint::ProgramResult;
-use solana_program::msg;
-use solana_program::program::invoke_signed;
-use solana_program::program_error::ProgramError;
-use solana_program::pubkey::Pubkey;
-use solana_program::rent::Rent;
-use solana_program::system_instruction::assign;
-use solana_program::system_instruction::create_account;
-use solana_program::sysvar::Sysvar;
-
-use crate::error::KryptonError;
-use crate::state::get_profile_pda;
-use crate::state::Guardian;
-use crate::state::ProfileHeader;
-use crate::state::DATA_LEN;
-use crate::state::MAX_GUARDIANS;
-use crate::state::PDA_SEED;
+use crate::prelude::*;
 
 use super::InitializeWalletArgs;
 

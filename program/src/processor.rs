@@ -16,8 +16,10 @@ use spl_token::{
 use crate::{
     error::KryptonError,
     instruction::{
-        add_recovery_guardians, initialize_wallet, remove_recovery_guardians, transfer_native_sol,
-        transfer_token, wrap_instruction, KryptonInstruction, modify_recovery_threshold,
+        add_recovery_sign,
+        add_recovery_guardians, initialize_wallet, modify_recovery_threshold,
+        remove_recovery_guardians, transfer_native_sol, transfer_token, wrap_instruction,
+        KryptonInstruction, initialize_recovery,
     },
     state::{get_profile_pda, verify_recovery_state, ProfileHeader, MAX_GUARDIANS, PDA_SEED},
 };
@@ -64,113 +66,17 @@ impl Processor {
             }
             KryptonInstruction::ModifyRecoveryThreshold(args) => {
                 msg!("Instruction: ModifyRecoveryThreshold");
-                modify_recovery_threshold::process_modify_recovery_threshold(program_id, accounts, args)
+                modify_recovery_threshold::process_modify_recovery_threshold(
+                    program_id, accounts, args,
+                )
             }
             KryptonInstruction::InitializeRecovery => {
                 msg!("Instruction: InitializeRecovery");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-                let new_profile_info = next_account_info(account_info_iter)?;
-                let new_authority_info = next_account_info(account_info_iter)?;
-
-                // ensure new_authority_info and guardian_info are signer
-                if !new_authority_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
-                if new_profile_pda != *new_profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                // if new recovery, then update recovery and unset other guardian signatures
-                if *new_profile_info.key != profile_data.recovery {
-                    msg!("new recovery: {:?}", new_authority_info.key);
-                    profile_data.recovery = *new_profile_info.key;
-                    for guardian in profile_data.guardians.iter_mut() {
-                        guardian.has_signed = false;
-                    }
-                }
-
-                profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
-
-                Ok(())
+                initialize_recovery::process_initialize_recovery(program_id, accounts)
             }
             KryptonInstruction::AddRecoverySign => {
                 msg!("Instruction: AddRecoverySign");
-
-                let profile_info = next_account_info(account_info_iter)?;
-                let authority_info = next_account_info(account_info_iter)?;
-                let new_profile_info = next_account_info(account_info_iter)?;
-                let new_authority_info = next_account_info(account_info_iter)?;
-                let guardian_info = next_account_info(account_info_iter)?;
-
-                // ensure guardian_info is signer
-                if !guardian_info.is_signer {
-                    return Err(KryptonError::NotSigner.into());
-                }
-
-                // ensure profile_info is writable
-                if !profile_info.is_writable {
-                    return Err(KryptonError::NotWriteable.into());
-                }
-
-                // ensure profile_info PDA corresponds to authority_info
-                let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-                if profile_pda != *profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                // ensure new_profile_info PDA corresponds to new_authority_info
-                let (new_profile_pda, _) = get_profile_pda(new_authority_info.key, program_id);
-                if new_profile_pda != *new_profile_info.key {
-                    return Err(ProgramError::InvalidSeeds);
-                }
-
-                msg!("account checks complete");
-
-                let mut profile_data =
-                    ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
-
-                // ensure recovery is happening for new_profile_info
-                if profile_data.recovery != *new_profile_info.key {
-                    return Err(KryptonError::NotAuthorizedToRecover.into());
-                }
-
-                // get index of signing guardian key
-                let idx = profile_data
-                    .guardians
-                    .into_iter()
-                    .position(|guardian| guardian.pubkey == *guardian_info.key);
-
-                // ensure guardian is present
-                if idx.is_none() {
-                    return Err(KryptonError::GuardianNotFound.into());
-                }
-
-                // add guardian signature
-                profile_data.guardians[idx.unwrap()].has_signed = true;
-                profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
-
-                Ok(())
+                add_recovery_sign::process_add_recovery_sign(program_id, accounts)
             }
             KryptonInstruction::RecoverWallet => {
                 msg!("Instruction: RecoverWallet");

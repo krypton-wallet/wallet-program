@@ -1,10 +1,12 @@
 pub mod add_recovery_guardians;
+pub mod initialize_recovery;
 pub mod initialize_wallet;
+pub mod modify_recovery_threshold;
 pub mod remove_recovery_guardians;
 pub mod transfer_native_sol;
 pub mod transfer_token;
 pub mod wrap_instruction;
-pub mod modify_recovery_threshold;
+pub mod add_recovery_sign;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
