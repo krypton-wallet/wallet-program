@@ -1,19 +1,14 @@
 use borsh::BorshDeserialize;
 use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
-    account_info::{AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
 };
 
-use crate::{
-    instruction::{
-        add_recovery_guardians, add_recovery_sign, initialize_recovery, initialize_wallet,
-        modify_recovery_threshold, recover_native_sol, recover_token, recover_wallet,
-        remove_recovery_guardians, transfer_native_sol, transfer_token, wrap_instruction,
-        KryptonInstruction,
-    },
+use crate::instruction::{
+    add_recovery_guardians, add_recovery_sign, initialize_recovery, initialize_wallet,
+    modify_recovery_threshold, recover_native_sol, recover_token, recover_wallet,
+    remove_recovery_guardians, transfer_native_sol, transfer_token, wrap_instruction,
+    KryptonInstruction,
 };
 
 pub struct Processor {}

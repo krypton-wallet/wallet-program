@@ -1,3 +1,6 @@
+mod guard;
+mod native_sol_transfer_guard;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
