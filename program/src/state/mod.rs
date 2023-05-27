@@ -5,6 +5,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
+pub use self::native_sol_transfer_guard::{NativeSolTransferGuard, NativeSolTransferInterval};
+
 /*
     32: authority pubkey
     1: recovery_threshold
@@ -48,4 +50,16 @@ pub struct ProfileHeader {
     pub guardians: [Guardian; 10],
     /// new PDA Pubkey to recover wallet into
     pub recovery: Pubkey,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+pub enum Guard {
+    NativeSolTransfer(NativeSolTransferGuard),
+}
+
+// add an account to hold guards?
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, ShankAccount)]
+pub struct GuardAccount {
+    pub target: Pubkey,
+    pub guard: Guard,
 }
