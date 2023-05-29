@@ -1,7 +1,9 @@
 use crate::{
     error::KryptonError,
+    prelude::ProfileHeader,
     state::{get_profile_pda, PDA_SEED},
 };
+use borsh::BorshDeserialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -38,8 +40,15 @@ pub fn process_transfer_token(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    // ensure profile_info PDA corresponds to authority_info
-    let (profile_pda, bump_seed) = get_profile_pda(authority_info.key, program_id);
+    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
+
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
+    // ensure seed_info is valid
+    let (profile_pda, bump_seed) = get_profile_pda(&profile_data.seed, program_id);
     if profile_pda != *profile_info.key {
         return Err(ProgramError::InvalidSeeds);
     }
@@ -71,10 +80,9 @@ pub fn process_transfer_token(
             token_program.clone(),
             token_account_info.clone(),
             dest_token_account_info.clone(),
-            authority_info.clone(),
             profile_info.clone(),
         ],
-        &[&[PDA_SEED, authority_info.key.as_ref(), &[bump_seed]]],
+        &[&[PDA_SEED, profile_data.seed.as_ref(), &[bump_seed]]],
     )?;
     msg!("finished transfer of mint");
 

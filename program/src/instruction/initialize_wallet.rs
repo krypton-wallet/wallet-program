@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use std::collections::HashSet;
+
+use crate::{prelude::*, state::UserProfile};
 
 use super::InitializeWalletArgs;
 
@@ -76,13 +78,15 @@ pub fn process_initialize_wallet(
     }
 
     // create ProfileHeader
-    let initial_data = ProfileHeader {
+    let initial_data = UserProfile {
+        seed: *authority_info.key,
         authority: *authority_info.key,
         recovery_threshold: args.recovery_threshold,
         guardians: vec![Guardian::default(); MAX_GUARDIANS as usize]
             .try_into()
             .unwrap(),
         recovery: Pubkey::default(),
+        recovered: HashSet::new(),
     };
     let initial_data_len = initial_data.try_to_vec()?.len();
     msg!("data len: {}, expected: {}", initial_data_len, DATA_LEN);

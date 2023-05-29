@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{prelude::*, state::UserProfile};
 
 pub fn process_initialize_recovery(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut account_info_iter = accounts.iter();
@@ -31,7 +31,7 @@ pub fn process_initialize_recovery(program_id: &Pubkey, accounts: &[AccountInfo]
 
     msg!("account checks complete");
 
-    let mut profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
+    let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
     // if new recovery, then update recovery and unset other guardian signatures
     if *new_profile_info.key != profile_data.recovery {

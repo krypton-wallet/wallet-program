@@ -1,3 +1,4 @@
+use borsh::BorshDeserialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -6,12 +7,12 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{error::KryptonError, state::get_profile_pda};
+use crate::{error::KryptonError, prelude::ProfileHeader};
 
 use super::TransferNativeSOLArgs;
 
 pub fn process_transfer_native_sol(
-    program_id: &Pubkey,
+    _program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: TransferNativeSOLArgs,
 ) -> ProgramResult {
@@ -31,10 +32,11 @@ pub fn process_transfer_native_sol(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    // ensure profile_info PDA corresponds to authority_info
-    let (profile_pda, _) = get_profile_pda(authority_info.key, program_id);
-    if profile_pda != *profile_info.key {
-        return Err(ProgramError::InvalidSeeds);
+    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
+
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
     }
 
     msg!("account checks complete");

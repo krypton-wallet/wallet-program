@@ -1,4 +1,7 @@
-use crate::{prelude::*, state::verify_recovery_state};
+use crate::{
+    prelude::*,
+    state::{verify_recovery_state, UserProfile},
+};
 
 pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut account_info_iter = accounts.iter();
@@ -34,7 +37,7 @@ pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
     msg!("old Profile PDA: {}", profile_pda);
     msg!("new Profile PDA: {}", new_profile_pda);
 
-    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
+    let profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
     // ensure recovery is happening for new_profile_info
     if profile_data.recovery != *new_profile_info.key {
