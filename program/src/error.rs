@@ -30,6 +30,8 @@ pub enum KryptonError {
     InvalidAuthority,
     #[error("The pubkey is not authorized to recover the wallet")]
     NotAuthorizedToRecover,
+    #[error("Required recovered accounts are not passed in")]
+    MissingRecoveredAccounts,
     #[error("There is insufficient SOL to transfer")]
     InsufficientFundsForTransaction,
     #[error("Operation overflowed")]

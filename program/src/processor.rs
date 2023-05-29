@@ -6,9 +6,8 @@ use solana_program::{
 
 use crate::instruction::{
     add_recovery_guardians, add_recovery_sign, initialize_recovery, initialize_wallet,
-    modify_recovery_threshold, recover_native_sol, recover_token, recover_wallet,
-    remove_recovery_guardians, transfer_native_sol, transfer_token, wrap_instruction,
-    KryptonInstruction,
+    modify_recovery_threshold, recover_wallet, remove_recovery_guardians, transfer_native_sol,
+    transfer_token, wrap_instruction, KryptonInstruction,
 };
 
 pub struct Processor {}
@@ -64,14 +63,6 @@ impl Processor {
             KryptonInstruction::RecoverWallet => {
                 msg!("Instruction: RecoverWallet");
                 recover_wallet::process_recover_wallet(program_id, accounts)
-            }
-            KryptonInstruction::RecoverToken => {
-                msg!("Instruction: RecoverToken");
-                recover_token::process_recover_token(program_id, accounts)
-            }
-            KryptonInstruction::RecoverNativeSOL => {
-                msg!("Instruction: RecoverNativeSOL");
-                recover_native_sol::process_recover_native_sol(program_id, accounts)
             }
         }
     }
