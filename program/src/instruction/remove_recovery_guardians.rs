@@ -1,6 +1,6 @@
 use crate::{
     error::KryptonError,
-    state::{get_profile_pda, Guardian, ProfileHeader, MAX_GUARDIANS},
+    state::{get_profile_pda, Guardian, UserProfile, MAX_GUARDIANS},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
@@ -11,19 +11,16 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use super::RemoveRecoveryGuardianArgs;
-
 pub fn process_remove_recovery_guardians(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    args: RemoveRecoveryGuardianArgs,
 ) -> ProgramResult {
     let mut account_info_iter = accounts.iter();
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
 
-    // ensure the specified amount of guardians are passed in
-    if (args.num_guardians + 2) < accounts.len() as u8 {
+    // ensure guardians are passed in
+    if accounts.len() < 3 {
         return Err(KryptonError::NotEnoughGuardians.into());
     }
 
@@ -44,13 +41,13 @@ pub fn process_remove_recovery_guardians(
 
     msg!("account checks complete");
 
-    let mut profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
+    let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
     msg!("old guardian list: {:?}", profile_data.guardians);
 
     // delete guardian(s)
     let mut guardians: Vec<Guardian> = profile_data.guardians.into_iter().collect();
-    for _ in 0..args.num_guardians {
+    for _ in 0..accounts.len() {
         let guardian_info = next_account_info(&mut account_info_iter)?;
 
         // get index of guardian key to be deleted

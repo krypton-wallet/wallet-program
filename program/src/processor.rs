@@ -39,15 +39,13 @@ impl Processor {
                 msg!("Instruction: WrapInstruction");
                 wrap_instruction::process_wrap_instruction(program_id, accounts, args)
             }
-            KryptonInstruction::AddRecoveryGuardians(args) => {
+            KryptonInstruction::AddRecoveryGuardians => {
                 msg!("Instruction: AddRecoveryGuardians");
-                add_recovery_guardians::process_add_recovery_guardians(program_id, accounts, args)
+                add_recovery_guardians::process_add_recovery_guardians(program_id, accounts)
             }
-            KryptonInstruction::RemoveRecoveryGuardians(args) => {
+            KryptonInstruction::RemoveRecoveryGuardians => {
                 msg!("Instruction: RemoveRecoveryGuardians");
-                remove_recovery_guardians::process_remove_recovery_guardians(
-                    program_id, accounts, args,
-                )
+                remove_recovery_guardians::process_remove_recovery_guardians(program_id, accounts)
             }
             KryptonInstruction::ModifyRecoveryThreshold(args) => {
                 msg!("Instruction: ModifyRecoveryThreshold");
