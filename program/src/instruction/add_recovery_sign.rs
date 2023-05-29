@@ -34,6 +34,11 @@ pub fn process_add_recovery_sign(program_id: &Pubkey, accounts: &[AccountInfo]) 
 
     let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
     // ensure recovery is happening for new_profile_info
     if profile_data.recovery != *new_profile_info.key {
         return Err(KryptonError::NotAuthorizedToRecover.into());

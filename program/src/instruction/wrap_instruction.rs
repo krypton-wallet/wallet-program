@@ -14,7 +14,7 @@ use solana_program::{
 use crate::{
     error::KryptonError,
     prelude::ProfileHeader,
-    state::{get_profile_pda, DATA_LEN, PDA_SEED},
+    state::{get_profile_pda, PDA_SEED, USER_PROFILE_LEN},
 };
 
 use super::WrapInstructionArgs;
@@ -48,21 +48,21 @@ pub fn process_wrap_instruction(
 
     let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
 
-    // ensure authority_info is valid
-    if profile_data.authority != *authority_info.key {
-        return Err(KryptonError::InvalidAuthority.into());
-    }
-
     // ensure seed_info is valid
     let (profile_pda, bump_seed) = get_profile_pda(&profile_data.seed, program_id);
     if profile_pda != *profile_info.key {
         return Err(ProgramError::InvalidSeeds);
     }
 
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
     msg!("account checks complete");
 
     // make a copy of PDA data
-    let mut old_data: [u8; DATA_LEN] = [0; DATA_LEN];
+    let mut old_data: [u8; USER_PROFILE_LEN] = [0; USER_PROFILE_LEN];
     old_data.copy_from_slice(&profile_info.data.borrow()[..]);
 
     // check if custom_program is system_program
@@ -122,7 +122,7 @@ pub fn process_wrap_instruction(
             &[profile_info.clone(), system_program.unwrap().clone()],
             &[&[PDA_SEED, profile_data.seed.as_ref(), &[bump_seed]]],
         )?;
-        profile_info.realloc(DATA_LEN, false)?;
+        profile_info.realloc(USER_PROFILE_LEN, false)?;
         profile_info.data.borrow_mut()[..].copy_from_slice(&old_data);
     }
 

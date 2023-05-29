@@ -9,7 +9,9 @@ solana_program::declare_id!("2aJqX3GKRPAsfByeMkL7y9SqAGmCQEnakbuHJBdxGaDL");
 pub mod prelude {
     pub use crate::{
         error::KryptonError,
-        state::{get_profile_pda, Guardian, ProfileHeader, DATA_LEN, MAX_GUARDIANS, PDA_SEED},
+        state::{
+            get_profile_pda, Guardian, ProfileHeader, MAX_GUARDIANS, PDA_SEED, USER_PROFILE_LEN,
+        },
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 

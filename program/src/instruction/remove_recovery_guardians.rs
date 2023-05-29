@@ -43,11 +43,16 @@ pub fn process_remove_recovery_guardians(
 
     let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
     msg!("old guardian list: {:?}", profile_data.guardians);
 
     // delete guardian(s)
     let mut guardians: Vec<Guardian> = profile_data.guardians.into_iter().collect();
-    for _ in 0..accounts.len() {
+    for _ in 2..accounts.len() {
         let guardian_info = next_account_info(&mut account_info_iter)?;
 
         // get index of guardian key to be deleted

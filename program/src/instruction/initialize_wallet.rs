@@ -44,8 +44,8 @@ pub fn process_initialize_wallet(
         let create_profile_account_instruction = create_account(
             authority_info.key,
             &profile_pda,
-            Rent::get()?.minimum_balance(DATA_LEN),
-            DATA_LEN as u64,
+            Rent::get()?.minimum_balance(USER_PROFILE_LEN),
+            USER_PROFILE_LEN as u64,
             program_id,
         );
 
@@ -74,7 +74,7 @@ pub fn process_initialize_wallet(
             &[&[PDA_SEED, authority_info.key.as_ref(), &[profile_bump_seed]]],
         )?;
 
-        profile_info.realloc(DATA_LEN, false)?;
+        profile_info.realloc(USER_PROFILE_LEN, false)?;
     }
 
     // create ProfileHeader
@@ -89,7 +89,11 @@ pub fn process_initialize_wallet(
         recovered: HashSet::new(),
     };
     let initial_data_len = initial_data.try_to_vec()?.len();
-    msg!("data len: {}, expected: {}", initial_data_len, DATA_LEN);
+    msg!(
+        "data len: {}, expected: {}",
+        initial_data_len,
+        USER_PROFILE_LEN
+    );
 
     initial_data.serialize(&mut &mut profile_info.try_borrow_mut_data()?[..initial_data_len])?;
 

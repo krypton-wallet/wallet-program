@@ -34,6 +34,11 @@ pub fn process_add_recovery_guardians(
 
     let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
     // assert that total number of guardians are less than or equal to MAX_GUARDIANS
     let guardian_count = profile_data
         .guardians
@@ -48,7 +53,7 @@ pub fn process_add_recovery_guardians(
     msg!("old guardian list: {:?}", profile_data.guardians);
 
     // add new guardian(s)
-    for i in 0..accounts.len() {
+    for i in 2..accounts.len() {
         let guardian_account_info = next_account_info(&mut account_info_iter)?;
         msg!(
             "newly added guardian {}: {:?}",

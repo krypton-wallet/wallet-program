@@ -37,6 +37,11 @@ pub fn process_modify_recovery_threshold(
 
     let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
 
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
     // update the recovery threshold
     profile_data.recovery_threshold = args.new_threshold;
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;

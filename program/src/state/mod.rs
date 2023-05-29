@@ -7,6 +7,12 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
+pub const MAX_GUARDIANS: u8 = 10;
+/*
+    32: seed pubkey
+    32: authority pubkey
+*/
+pub const PROFILE_HEADER_LEN: usize = 32 + 32;
 /*
     32: seed pubkey
     32: authority pubkey
@@ -15,8 +21,7 @@ use solana_program::pubkey::Pubkey;
     32: recovery pubkey
     : 32*n for n recovered pubkeys
 */
-pub const MAX_GUARDIANS: u8 = 10;
-pub const DATA_LEN: usize = 32 + 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
+pub const USER_PROFILE_LEN: usize = 32 + 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
 pub const PDA_SEED: &[u8] = b"profile";
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy, Default)]
