@@ -1,18 +1,22 @@
 mod guard;
 mod native_sol_transfer_guard;
 
+use std::collections::HashSet;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
 /*
+    32: seed pubkey
     32: authority pubkey
     1: recovery_threshold
     330: 33 * 10 space (32: pubkey, 1: has_signed) for MAX_GUARDIANS guardians
     32: recovery pubkey
+    : 32*n for n recovered pubkeys
 */
 pub const MAX_GUARDIANS: u8 = 10;
-pub const DATA_LEN: usize = 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
+pub const DATA_LEN: usize = 32 + 32 + 1 + (32 + 1) * MAX_GUARDIANS as usize + 32;
 pub const PDA_SEED: &[u8] = b"profile";
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy, Default)]
@@ -29,7 +33,7 @@ pub fn get_profile_pda(datakey: &Pubkey, program_id: &Pubkey) -> (Pubkey, u8) {
 }
 
 /// Verifies if profile_data has at least recover_threshold guardian signatures
-pub fn verify_recovery_state(profile_data: &ProfileHeader) -> bool {
+pub fn verify_recovery_state(profile_data: &UserProfile) -> bool {
     let num_signatures = profile_data
         .guardians
         .into_iter()
@@ -39,8 +43,10 @@ pub fn verify_recovery_state(profile_data: &ProfileHeader) -> bool {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone, ShankAccount)]
-pub struct ProfileHeader {
-    /// keypair Pubkey of PDA
+pub struct UserProfile {
+    /// keypair Pubkey seed of PDA
+    pub seed: Pubkey,
+    /// authority keypair Pubkey
     pub authority: Pubkey,
     /// number of guardian signatures required to sign on recovery
     pub recovery_threshold: u8,
@@ -48,4 +54,14 @@ pub struct ProfileHeader {
     pub guardians: [Guardian; 10],
     /// new PDA Pubkey to recover wallet into
     pub recovery: Pubkey,
+    /// recovered PDA Pubkeys
+    pub recovered: HashSet<Pubkey>,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, ShankAccount)]
+pub struct ProfileHeader {
+    /// keypair Pubkey seed of PDA
+    pub seed: Pubkey,
+    /// authority keypair Pubkey
+    pub authority: Pubkey,
 }
