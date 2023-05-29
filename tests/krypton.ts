@@ -4,6 +4,7 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   Transaction,
+  SystemProgram,
 } from "@solana/web3.js";
 import * as krypton from "../js/src/generated";
 
@@ -89,6 +90,19 @@ const run = async () => {
   } else {
     throw new Error("profile not found");
   }
+
+  let [guardAddress] = findGuardAddress(profileAddress);
+  let createGuardIx = krypton.createInitializeNativeSolTransferGuardInstruction({
+    profileInfo: profileAddress,
+    authorityInfo: feePayerKeypair.publicKey,
+    guardInfo: guardAddress,
+    systemProgram: SystemProgram.programId
+  }, {
+    initializeNativeSolTransferGuardArgs: {
+      target: profileAddress,
+      transferAmount: LAMPORTS_PER_SOL
+    }
+  });
 };
 
 run().then(() => console.log("done"));
@@ -99,3 +113,7 @@ const findProfileAddress = (authority: PublicKey) => {
     krypton.PROGRAM_ID,
   );
 };
+
+const findGuardAddress = (profile: PublicKey) => {
+  return PublicKey.findProgramAddressSync([Buffer.from("guard"), profile.toBuffer()], krypton.PROGRAM_ID)
+}
