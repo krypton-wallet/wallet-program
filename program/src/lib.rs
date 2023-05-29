@@ -15,6 +15,7 @@ pub mod prelude {
 
     pub use spl_token::state::Account as TokenAccount;
 
+    pub use mpl_utils::{assert_derivation, assert_owned_by, create_or_allocate_account_raw};
     pub use solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,

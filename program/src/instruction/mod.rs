@@ -149,5 +149,6 @@ pub enum KryptonInstruction {
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program to be recovered")]
     #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
     #[account(2, writable, name = "guard_info", desc = "PDA of the guard account that will be initialized")]
+    #[account(3, name = "system_program", desc = "system program, used to create the new guard account")]
     InitializeNativeSolTransferGuard(InitializeNativeSolTransferGuardArgs)
 }

@@ -35,6 +35,14 @@ pub struct NativeSolTransferGuard {
 }
 
 impl NativeSolTransferGuard {
+    pub const LENGTH: u8 = 32 //pubkey
+    + 8 // u64
+    + 8 // u64
+    + 8 // i64
+    + 1 // interval (enum)
+    + 8 // last transferred
+    + 8 + 1; // context
+
     pub fn new(target: &Pubkey, transfer_limit: u64, interval: NativeSolTransferInterval) -> Self {
         Self {
             target: target.to_owned(),

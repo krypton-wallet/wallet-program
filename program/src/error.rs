@@ -32,6 +32,8 @@ pub enum KryptonError {
     InsufficientFundsForTransaction,
     #[error("Operation overflowed")]
     Overflow,
+    #[error("Invalid Account Address")]
+    InvalidAccountAddress,
 }
 
 impl From<KryptonError> for ProgramError {

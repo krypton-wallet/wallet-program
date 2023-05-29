@@ -15,6 +15,7 @@ num-derive = "0.3"
 thiserror = "1.0"
 shank = "0.0.12"
 chrono = { version = "*", default-features = false, features = ["alloc"]}
+mpl-utils = "0.2.0"
 
 
 # We don't use these deps at all,
