@@ -325,6 +325,29 @@ createErrorFromCodeLookup.set(0xd, () => new OverflowError())
 createErrorFromNameLookup.set('Overflow', () => new OverflowError())
 
 /**
+ * InvalidAccountAddress: 'Invalid Account Address'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAccountAddressError extends Error {
+  readonly code: number = 0xe
+  readonly name: string = 'InvalidAccountAddress'
+  constructor() {
+    super('Invalid Account Address')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAccountAddressError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xe, () => new InvalidAccountAddressError())
+createErrorFromNameLookup.set(
+  'InvalidAccountAddress',
+  () => new InvalidAccountAddressError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

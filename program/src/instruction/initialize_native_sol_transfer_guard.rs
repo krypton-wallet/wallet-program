@@ -50,7 +50,7 @@ pub fn process_initialize_native_sol_transfer_guard(
 
     create_or_allocate_account_raw(
         crate::id(),
-        authority_info,
+        guard_info,
         system_program_info,
         profile_info,
         serialized.len(),
