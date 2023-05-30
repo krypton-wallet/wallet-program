@@ -1,15 +1,4 @@
-use crate::{
-    error::KryptonError,
-    state::{get_profile_pda, Guardian, UserProfile, MAX_GUARDIANS},
-};
-use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-};
+use crate::prelude::*;
 
 pub fn process_remove_recovery_guardians(
     program_id: &Pubkey,

@@ -1,15 +1,5 @@
-use borsh::BorshDeserialize;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-};
-
-use crate::{error::KryptonError, prelude::ProfileHeader};
-
 use super::TransferNativeSOLArgs;
+use crate::prelude::*;
 
 pub fn process_transfer_native_sol(
     _program_id: &Pubkey,
@@ -32,7 +22,8 @@ pub fn process_transfer_native_sol(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
+    let profile_data =
+        ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..PROFILE_HEADER_LEN])?;
 
     // ensure authority_info is valid
     if profile_data.authority != *authority_info.key {

@@ -1,7 +1,4 @@
-use crate::{
-    prelude::*,
-    state::{verify_recovery_state, UserProfile, PROFILE_HEADER_LEN},
-};
+use crate::prelude::*;
 
 pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut account_info_iter = accounts.iter();

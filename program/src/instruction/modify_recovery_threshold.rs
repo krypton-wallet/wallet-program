@@ -1,5 +1,5 @@
 use super::ModifyRecoveryThresholdArgs;
-use crate::{prelude::*, state::UserProfile};
+use crate::prelude::*;
 
 pub fn process_modify_recovery_threshold(
     program_id: &Pubkey,

@@ -1,21 +1,5 @@
-use crate::{
-    error::KryptonError,
-    prelude::ProfileHeader,
-    state::{get_profile_pda, PDA_SEED},
-};
-use borsh::BorshDeserialize;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program::invoke_signed,
-    program_error::ProgramError,
-    program_pack::Pack,
-    pubkey::Pubkey,
-};
-use spl_token::{self, state::Account as TokenAccount};
-
 use super::TransferTokenArgs;
+use crate::prelude::*;
 
 pub fn process_transfer_token(
     program_id: &Pubkey,
@@ -40,7 +24,8 @@ pub fn process_transfer_token(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
+    let profile_data =
+        ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..PROFILE_HEADER_LEN])?;
 
     // ensure authority_info is valid
     if profile_data.authority != *authority_info.key {

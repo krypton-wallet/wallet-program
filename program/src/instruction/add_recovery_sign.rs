@@ -1,4 +1,4 @@
-use crate::{prelude::*, state::UserProfile};
+use crate::prelude::*;
 
 pub fn process_add_recovery_sign(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut account_info_iter = accounts.iter();

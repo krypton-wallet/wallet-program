@@ -1,4 +1,4 @@
-use crate::{prelude::*, state::UserProfile};
+use crate::prelude::*;
 
 pub fn process_add_recovery_guardians(
     program_id: &Pubkey,

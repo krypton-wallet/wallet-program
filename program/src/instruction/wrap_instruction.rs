@@ -1,23 +1,10 @@
-use borsh::BorshDeserialize;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
-    msg,
-    program::invoke_signed,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    system_instruction::assign,
-    system_program::check_id,
-};
-
-use crate::{
-    error::KryptonError,
-    prelude::ProfileHeader,
-    state::{get_profile_pda, PDA_SEED, USER_PROFILE_LEN},
-};
-
 use super::WrapInstructionArgs;
+use crate::prelude::*;
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    program_memory::sol_memcpy,
+    system_program::{check_id, ID},
+};
 
 pub fn process_wrap_instruction(
     program_id: &Pubkey,
@@ -46,7 +33,8 @@ pub fn process_wrap_instruction(
         return Err(KryptonError::NotWriteable.into());
     }
 
-    let profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..64])?;
+    let profile_data =
+        ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..PROFILE_HEADER_LEN])?;
 
     // ensure seed_info is valid
     let (profile_pda, bump_seed) = get_profile_pda(&profile_data.seed, program_id);
@@ -62,8 +50,7 @@ pub fn process_wrap_instruction(
     msg!("account checks complete");
 
     // make a copy of PDA data
-    let mut old_data: [u8; USER_PROFILE_LEN] = [0; USER_PROFILE_LEN];
-    old_data.copy_from_slice(&profile_info.data.borrow()[..]);
+    let old_data = profile_info.try_borrow_data()?.try_to_vec()?;
 
     // check if custom_program is system_program
     let mut system_program: Option<&AccountInfo> = None;
@@ -97,7 +84,7 @@ pub fn process_wrap_instruction(
     // system_program is present so assign PDA to be system-owned
     if system_program.is_some() {
         profile_info.realloc(0, false)?;
-        profile_info.assign(&solana_program::system_program::ID);
+        profile_info.assign(&ID);
     }
 
     // call CPI instruction
@@ -122,8 +109,12 @@ pub fn process_wrap_instruction(
             &[profile_info.clone(), system_program.unwrap().clone()],
             &[&[PDA_SEED, profile_data.seed.as_ref(), &[bump_seed]]],
         )?;
-        profile_info.realloc(USER_PROFILE_LEN, false)?;
-        profile_info.data.borrow_mut()[..].copy_from_slice(&old_data);
+        profile_info.realloc(old_data.len(), false)?;
+        sol_memcpy(
+            &mut profile_info.data.borrow_mut()[..],
+            &old_data.as_slice(),
+            old_data.len(),
+        );
     }
 
     Ok(())

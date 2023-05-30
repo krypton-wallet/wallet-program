@@ -10,7 +10,8 @@ pub mod prelude {
     pub use crate::{
         error::KryptonError,
         state::{
-            get_profile_pda, Guardian, ProfileHeader, MAX_GUARDIANS, PDA_SEED, USER_PROFILE_LEN,
+            get_profile_pda, verify_recovery_state, Guardian, ProfileHeader, UserProfile,
+            MAX_GUARDIANS, PDA_SEED, PROFILE_HEADER_LEN,
         },
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
