@@ -40,11 +40,7 @@ pub fn process_add_recovery_guardians(
     }
 
     // assert that total number of guardians are less than or equal to MAX_GUARDIANS
-    let guardian_count = profile_data
-        .guardians
-        .into_iter()
-        .filter(|guardian| guardian.pubkey != Pubkey::default())
-        .count();
+    let guardian_count = profile_data.guardians.len();
     if (guardian_count + accounts.len()) > MAX_GUARDIANS as usize {
         return Err(KryptonError::TooManyGuardians.into());
     }
@@ -60,14 +56,12 @@ pub fn process_add_recovery_guardians(
             i,
             guardian_account_info.key
         );
-        let new_guardian = Guardian {
-            pubkey: *guardian_account_info.key,
-            has_signed: false,
-        };
-        profile_data.guardians[guardian_count + i] = new_guardian;
+        profile_data
+            .guardians
+            .insert(*guardian_account_info.key, false);
     }
 
-    msg!("new guardian count: {}", guardian_count + accounts.len());
+    msg!("new guardian count: {}", profile_data.guardians.len());
     msg!("new guardian list: {:?}", profile_data.guardians);
 
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;

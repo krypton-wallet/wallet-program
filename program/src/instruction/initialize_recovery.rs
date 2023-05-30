@@ -45,12 +45,12 @@ pub fn process_initialize_recovery(program_id: &Pubkey, accounts: &[AccountInfo]
         return Err(KryptonError::InvalidAuthority.into());
     }
 
-    // if new recovery, then update recovery and unset other guardian signatures
+    // if new recovery, then update recovery and unset all guardian signatures
     if *new_profile_info.key != profile_data.recovery {
         msg!("new recovery: {:?}", new_authority_info.key);
         profile_data.recovery = *new_profile_info.key;
-        for guardian in profile_data.guardians.iter_mut() {
-            guardian.has_signed = false;
+        for (_, has_signed) in profile_data.guardians.iter_mut() {
+            *has_signed = false;
         }
     }
 
