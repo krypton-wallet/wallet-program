@@ -1,19 +1,13 @@
 use borsh::BorshDeserialize;
 use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
-    account_info::{AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
 };
 
-use crate::{
-    instruction::{
-        add_recovery_guardians, add_recovery_sign, initialize_recovery, initialize_wallet,
-        modify_recovery_threshold, recover_native_sol, recover_token, recover_wallet,
-        remove_recovery_guardians, transfer_native_sol, transfer_token, wrap_instruction,
-        KryptonInstruction,
-    },
+use crate::instruction::{
+    add_recovery_guardians, add_recovery_sign, initialize_recovery, initialize_wallet,
+    modify_recovery_threshold, recover_wallet, remove_recovery_guardians, transfer_native_sol,
+    transfer_token, wrap_instruction, KryptonInstruction,
 };
 
 pub struct Processor {}
@@ -44,15 +38,13 @@ impl Processor {
                 msg!("Instruction: WrapInstruction");
                 wrap_instruction::process_wrap_instruction(program_id, accounts, args)
             }
-            KryptonInstruction::AddRecoveryGuardians(args) => {
+            KryptonInstruction::AddRecoveryGuardians => {
                 msg!("Instruction: AddRecoveryGuardians");
-                add_recovery_guardians::process_add_recovery_guardians(program_id, accounts, args)
+                add_recovery_guardians::process_add_recovery_guardians(program_id, accounts)
             }
-            KryptonInstruction::RemoveRecoveryGuardians(args) => {
+            KryptonInstruction::RemoveRecoveryGuardians => {
                 msg!("Instruction: RemoveRecoveryGuardians");
-                remove_recovery_guardians::process_remove_recovery_guardians(
-                    program_id, accounts, args,
-                )
+                remove_recovery_guardians::process_remove_recovery_guardians(program_id, accounts)
             }
             KryptonInstruction::ModifyRecoveryThreshold(args) => {
                 msg!("Instruction: ModifyRecoveryThreshold");
@@ -71,14 +63,6 @@ impl Processor {
             KryptonInstruction::RecoverWallet => {
                 msg!("Instruction: RecoverWallet");
                 recover_wallet::process_recover_wallet(program_id, accounts)
-            }
-            KryptonInstruction::RecoverToken => {
-                msg!("Instruction: RecoverToken");
-                recover_token::process_recover_token(program_id, accounts)
-            }
-            KryptonInstruction::RecoverNativeSOL => {
-                msg!("Instruction: RecoverNativeSOL");
-                recover_native_sol::process_recover_native_sol(program_id, accounts)
             }
         }
     }

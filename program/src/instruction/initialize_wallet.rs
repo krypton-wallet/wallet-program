@@ -1,6 +1,6 @@
-use crate::prelude::*;
-
 use super::InitializeWalletArgs;
+use crate::prelude::*;
+use std::collections::HashSet;
 
 pub fn process_initialize_wallet(
     program_id: &Pubkey,
@@ -36,14 +36,28 @@ pub fn process_initialize_wallet(
 
     msg!("account checks complete");
 
+    // create ProfileHeader
+    let initial_data = UserProfile {
+        seed: *authority_info.key,
+        authority: *authority_info.key,
+        recovery_threshold: args.recovery_threshold,
+        guardians: vec![Guardian::default(); MAX_GUARDIANS as usize]
+            .try_into()
+            .unwrap(),
+        recovery: Pubkey::default(),
+        recovered: HashSet::new(),
+    };
+    let initial_data_len = initial_data.try_to_vec()?.len();
+    msg!("data len: {}", initial_data_len,);
+
     // create profile account inside profile pda iff pda account does not exist
     if **profile_info.try_borrow_lamports()? == 0 {
         msg!("no lamports, creating new PDA account....");
         let create_profile_account_instruction = create_account(
             authority_info.key,
             &profile_pda,
-            Rent::get()?.minimum_balance(DATA_LEN),
-            DATA_LEN as u64,
+            Rent::get()?.minimum_balance(initial_data_len),
+            initial_data_len as u64,
             program_id,
         );
 
@@ -72,20 +86,8 @@ pub fn process_initialize_wallet(
             &[&[PDA_SEED, authority_info.key.as_ref(), &[profile_bump_seed]]],
         )?;
 
-        profile_info.realloc(DATA_LEN, false)?;
+        profile_info.realloc(initial_data_len, false)?;
     }
-
-    // create ProfileHeader
-    let initial_data = ProfileHeader {
-        authority: *authority_info.key,
-        recovery_threshold: args.recovery_threshold,
-        guardians: vec![Guardian::default(); MAX_GUARDIANS as usize]
-            .try_into()
-            .unwrap(),
-        recovery: Pubkey::default(),
-    };
-    let initial_data_len = initial_data.try_to_vec()?.len();
-    msg!("data len: {}, expected: {}", initial_data_len, DATA_LEN);
 
     initial_data.serialize(&mut &mut profile_info.try_borrow_mut_data()?[..initial_data_len])?;
 
