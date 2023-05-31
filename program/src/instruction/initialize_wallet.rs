@@ -1,6 +1,6 @@
 use super::InitializeWalletArgs;
 use crate::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub fn process_initialize_wallet(
     program_id: &Pubkey,
@@ -41,9 +41,7 @@ pub fn process_initialize_wallet(
         seed: *authority_info.key,
         authority: *authority_info.key,
         recovery_threshold: args.recovery_threshold,
-        guardians: vec![Guardian::default(); MAX_GUARDIANS as usize]
-            .try_into()
-            .unwrap(),
+        guardians: HashMap::new(),
         recovery: Pubkey::default(),
         recovered: HashSet::new(),
     };

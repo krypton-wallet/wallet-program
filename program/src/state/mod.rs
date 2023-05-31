@@ -4,7 +4,7 @@ mod native_sol_transfer_guard;
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub const MAX_GUARDIANS: u8 = 10;
 /*
@@ -13,14 +13,6 @@ pub const MAX_GUARDIANS: u8 = 10;
 */
 pub const PROFILE_HEADER_LEN: usize = 32 + 32;
 pub const PDA_SEED: &[u8] = b"profile";
-
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Copy, Default)]
-pub struct Guardian {
-    /// Pubkey of guardian
-    pub pubkey: Pubkey,
-    /// flag to determine if guardian signed for recovery
-    pub has_signed: bool,
-}
 
 /// Returns associated profile PDA for data_account PubKey
 pub fn get_profile_pda(datakey: &Pubkey, program_id: &Pubkey) -> (Pubkey, u8) {
@@ -31,8 +23,8 @@ pub fn get_profile_pda(datakey: &Pubkey, program_id: &Pubkey) -> (Pubkey, u8) {
 pub fn verify_recovery_state(profile_data: &UserProfile) -> bool {
     let num_signatures = profile_data
         .guardians
-        .into_iter()
-        .filter(|guardian| guardian.has_signed)
+        .values()
+        .filter(|&has_signed| *has_signed)
         .count();
     num_signatures >= profile_data.recovery_threshold as usize
 }
@@ -46,7 +38,7 @@ pub struct UserProfile {
     /// number of guardian signatures required to sign on recovery
     pub recovery_threshold: u8,
     /// guardians
-    pub guardians: [Guardian; 10],
+    pub guardians: HashMap<Pubkey, bool>,
     /// new PDA Pubkey to recover wallet into
     pub recovery: Pubkey,
     /// recovered PDA Pubkeys

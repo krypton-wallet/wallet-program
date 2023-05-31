@@ -40,31 +40,17 @@ pub fn process_remove_recovery_guardians(
     msg!("old guardian list: {:?}", profile_data.guardians);
 
     // delete guardian(s)
-    let mut guardians: Vec<Guardian> = profile_data.guardians.into_iter().collect();
     for _ in 2..accounts.len() {
         let guardian_info = next_account_info(&mut account_info_iter)?;
 
-        // get index of guardian key to be deleted
-        let idx = guardians
-            .iter()
-            .position(|guardian| guardian.pubkey == *guardian_info.key);
-
-        // ensure guardian is present
-        if idx.is_none() {
+        // delete guardian if present; return Err otherwise
+        if profile_data.guardians.remove(guardian_info.key).is_none() {
             return Err(KryptonError::GuardianNotFound.into());
         }
-
-        guardians.remove(idx.unwrap());
         msg!("deleted guardian {:?}", guardian_info.key);
     }
-
     msg!("new guardian list: {:?}", profile_data.guardians);
 
-    while guardians.len() < MAX_GUARDIANS as usize {
-        guardians.push(Guardian::default());
-    }
-
-    profile_data.guardians = guardians.try_into().unwrap();
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
 
     Ok(())

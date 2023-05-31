@@ -87,6 +87,17 @@ pub fn process_recover_wallet(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
     // update new_profile_info
     new_profile_data.serialize(&mut &mut new_profile_info.try_borrow_mut_data()?[..])?;
 
+    // transfer extra lamports from profile_info to new_profile_info
+    let rent_exempt = Rent::get()?.minimum_balance(PROFILE_HEADER_LEN);
+    let balance = profile_info
+        .lamports()
+        .checked_sub(rent_exempt)
+        .ok_or(KryptonError::InsufficientFundsForTransaction)?;
+    **new_profile_info.try_borrow_mut_lamports()? = balance
+        .checked_add(new_profile_info.lamports())
+        .ok_or(KryptonError::Overflow)?;
+    **profile_info.try_borrow_mut_lamports()? = rent_exempt;
+
     // convert profile_info to ProfileHeader with new authority
     let profile_header = ProfileHeader {
         seed: profile_data.seed,

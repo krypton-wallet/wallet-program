@@ -44,19 +44,15 @@ pub fn process_add_recovery_sign(program_id: &Pubkey, accounts: &[AccountInfo]) 
         return Err(KryptonError::NotAuthorizedToRecover.into());
     }
 
-    // get index of signing guardian key
-    let idx = profile_data
-        .guardians
-        .into_iter()
-        .position(|guardian| guardian.pubkey == *guardian_info.key);
-
     // ensure guardian is present
-    if idx.is_none() {
+    if !profile_data.guardians.contains_key(guardian_info.key) {
         return Err(KryptonError::GuardianNotFound.into());
     }
 
     // add guardian signature
-    profile_data.guardians[idx.unwrap()].has_signed = true;
+    if let Some(has_signed) = profile_data.guardians.get_mut(guardian_info.key) {
+        *has_signed = true;
+    };
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
 
     Ok(())
