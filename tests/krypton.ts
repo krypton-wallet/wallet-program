@@ -55,41 +55,41 @@ const run = async () => {
     console.log("profile not found");
   }
 
-  // add a recovery guardian
-  const guardianKeypair = Keypair.generate();
-  const addGuardianIx = krypton.createAddRecoveryGuardiansInstruction({
-    profileInfo: profileAddress,
-    authorityInfo: feePayerKeypair.publicKey,
-    guardian: guardianKeypair.publicKey,
-  }, {
-    addRecoveryGuardianArgs: {
-      numGuardians: 1,
-    },
-  });
+  // // add a recovery guardian
+  // const guardianKeypair = Keypair.generate();
+  // const addGuardianIx = krypton.createAddRecoveryGuardiansInstruction({
+  //   profileInfo: profileAddress,
+  //   authorityInfo: feePayerKeypair.publicKey,
+  //   guardian: guardianKeypair.publicKey,
+  // }, {
+  //   addRecoveryGuardianArgs: {
+  //     numGuardians: 1,
+  //   },
+  // });
 
-  const addGuardianTx = new Transaction();
-  addGuardianTx.add(addGuardianIx);
+  // const addGuardianTx = new Transaction();
+  // addGuardianTx.add(addGuardianIx);
 
-  const addGuardianSig = await connection.sendTransaction(addGuardianTx, [
-    feePayerKeypair,
-  ], { skipPreflight: true });
+  // const addGuardianSig = await connection.sendTransaction(addGuardianTx, [
+  //   feePayerKeypair,
+  // ], { skipPreflight: true });
 
-  await connection.confirmTransaction(addGuardianSig);
+  // await connection.confirmTransaction(addGuardianSig);
 
-  const profileAccountAfter = await connection.getAccountInfo(profileAddress);
-  if (profileAccountAfter) {
-    const [profile] = krypton.ProfileHeader.fromAccountInfo(
-      profileAccountAfter,
-    );
-    console.log(profile);
+  // const profileAccountAfter = await connection.getAccountInfo(profileAddress);
+  // if (profileAccountAfter) {
+  //   const [profile] = krypton.ProfileHeader.fromAccountInfo(
+  //     profileAccountAfter,
+  //   );
+  //   console.log(profile);
 
-    profile.guardians.forEach((guardian) => {
-      console.log("guardian");
-      console.log(guardian.pubkey.toString());
-    });
-  } else {
-    throw new Error("profile not found");
-  }
+  //   profile.guardians.forEach((guardian) => {
+  //     console.log("guardian");
+  //     console.log(guardian.pubkey.toString());
+  //   });
+  // } else {
+  //   throw new Error("profile not found");
+  // }
 
   let [guardAddress] = findGuardAddress(profileAddress);
   let createGuardIx = krypton.createInitializeNativeSolTransferGuardInstruction({
@@ -103,6 +103,30 @@ const run = async () => {
       transferAmount: LAMPORTS_PER_SOL
     }
   });
+
+  const createGuardTx = new Transaction();
+  createGuardTx.add(createGuardIx);
+
+  const createGuardSig = await connection.sendTransaction(createGuardTx, [
+    feePayerKeypair,
+  ], { skipPreflight: true });
+
+  await connection.confirmTransaction(createGuardSig);
+
+  const guardAccountAfter = await connection.getAccountInfo(guardAddress);
+  if (guardAccountAfter) {
+    const [profile] = krypton.GuardAccount.fromAccountInfo(
+      guardAccountAfter,
+    );
+    console.log(profile);
+
+    console.log("target: ")
+    console.log(profile.target)
+    console.log("guard: ")
+    console.log(profile.guard.fields[0])
+  } else {
+    throw new Error("profile not found");
+  }
 };
 
 run().then(() => console.log("done"));
