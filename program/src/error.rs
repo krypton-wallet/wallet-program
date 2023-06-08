@@ -34,6 +34,14 @@ pub enum KryptonError {
     Overflow,
     #[error("Invalid Account Address")]
     InvalidAccountAddress,
+    #[error("Invalid date time")]
+    InvalidDateTime,
+    #[error("Target account not found")]
+    TargetAccountNotFound,
+    #[error("Guard Context not found")]
+    GuardContextNotFound,
+    #[error("Arithmetic Overflow")]
+    ArithmeticOverflow,
 }
 
 impl From<KryptonError> for ProgramError {

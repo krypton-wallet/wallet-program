@@ -15,7 +15,7 @@ pub fn process_initialize_native_sol_transfer_guard(
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
     let guard_info = next_account_info(&mut account_info_iter)?;
-    let system_program_info = next_account_info(&mut account_info_iter)?;
+    let _system_program_info = next_account_info(&mut account_info_iter)?;
 
     let profile = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
 
@@ -36,7 +36,7 @@ pub fn process_initialize_native_sol_transfer_guard(
         KryptonError::InvalidAccountAddress,
     )?;
 
-    let profile_signer_seeds = &[PDA_SEED, profile.authority.as_ref(), &[profile_bump]];
+    let _profile_signer_seeds = &[PDA_SEED, profile.authority.as_ref(), &[profile_bump]];
 
     let sol_guard = NativeSolTransferGuard::new(
         profile_info.key,
@@ -67,6 +67,13 @@ pub fn process_initialize_native_sol_transfer_guard(
         serialized.len() as u64,
         &crate::id(),
     );
+    // invoke CPI to create profile account
+    invoke_signed(
+        &create_profile_account_instruction,
+        &[authority_info.clone(), guard_info.clone()],
+        &[guard_signer_seeds],
+    )?;
+    msg!("created account with system program");
 
     // ensure there is enough SOL to transfer
     if **profile_info.try_borrow_lamports()? < required_lamports {
@@ -77,15 +84,6 @@ pub fn process_initialize_native_sol_transfer_guard(
     **profile_info.try_borrow_mut_lamports()? -= required_lamports;
     **authority_info.try_borrow_mut_lamports()? += required_lamports;
 
-    // invoke CPI to create profile account
-    invoke_signed(
-        &create_profile_account_instruction,
-        &[
-            authority_info.clone(),
-            guard_info.clone(),
-        ],
-        &[guard_signer_seeds],
-    )?;
 
     // write bytes to new account
     sol_memcpy(
@@ -130,7 +128,7 @@ pub fn create_or_allocate_account_raw<'a>(
                 new_account_info.clone(),
                 system_program_info.clone(),
             ],
-            &[signer_seeds]
+            &[signer_seeds],
         )?;
     }
 
