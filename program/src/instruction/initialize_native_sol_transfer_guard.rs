@@ -49,6 +49,7 @@ pub fn process_initialize_native_sol_transfer_guard(
     };
 
     let serialized = guard_account.try_to_vec()?;
+    msg!("serialized size: {}", serialized.len());
     let required_lamports = Rent::get()?.minimum_balance(serialized.len());
 
     // create_or_allocate_account_raw(
@@ -81,9 +82,11 @@ pub fn process_initialize_native_sol_transfer_guard(
     }
 
     // debit profile_info and credit dest
-    **profile_info.try_borrow_mut_lamports()? -= required_lamports;
-    **authority_info.try_borrow_mut_lamports()? += required_lamports;
+    let profile_lamports = profile_info.try_borrow_mut_lamports()?;
+    let authority_lamports = authority_info.try_borrow_mut_lamports()?;
 
+    profile_lamports.checked_sub(required_lamports).ok_or(KryptonError::ArithmeticOverflow)?;
+    authority_lamports.checked_add(required_lamports).ok_or(KryptonError::ArithmeticOverflow)?;
 
     // write bytes to new account
     sol_memcpy(

@@ -92,6 +92,7 @@ const run = async () => {
   // }
 
   let [guardAddress] = findGuardAddress(profileAddress);
+  console.log("guard address", guardAddress.toString());
   let createGuardIx = krypton.createInitializeNativeSolTransferGuardInstruction({
     profileInfo: profileAddress,
     authorityInfo: feePayerKeypair.publicKey,
