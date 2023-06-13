@@ -6,16 +6,18 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type RemoveRecoveryGuardianArgs = {
-  numGuardians: number
+/**
+ * @category enums
+ * @category generated
+ */
+export enum NativeSolTransferInterval {
+  Day,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const removeRecoveryGuardianArgsBeet =
-  new beet.BeetArgsStruct<RemoveRecoveryGuardianArgs>(
-    [['numGuardians', beet.u8]],
-    'RemoveRecoveryGuardianArgs'
-  )
+export const nativeSolTransferIntervalBeet = beet.fixedScalarEnum(
+  NativeSolTransferInterval
+) as beet.FixedSizeBeet<NativeSolTransferInterval, NativeSolTransferInterval>

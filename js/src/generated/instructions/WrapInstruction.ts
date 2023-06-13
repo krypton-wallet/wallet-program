@@ -40,7 +40,7 @@ export const WrapInstructionStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _WrapInstruction_ instruction
  *
  * @property [_writable_] profileInfo PDA of Krypton Program
- * @property [**signer**] authorityInfo Pubkey of keypair of PDA
+ * @property [**signer**] authorityInfo Pubkey of authority keypair of PDA
  * @property [] customProgram Calling program of the original instruction
  * @property [] customAccount Account required by original instruction
  * @category Instructions

@@ -256,13 +256,36 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * InvalidAuthority: 'The pubkey is not authorized to act on behalf of the wallet'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuthorityError extends Error {
+  readonly code: number = 0xb
+  readonly name: string = 'InvalidAuthority'
+  constructor() {
+    super('The pubkey is not authorized to act on behalf of the wallet')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuthorityError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb, () => new InvalidAuthorityError())
+createErrorFromNameLookup.set(
+  'InvalidAuthority',
+  () => new InvalidAuthorityError()
+)
+
+/**
  * NotAuthorizedToRecover: 'The pubkey is not authorized to recover the wallet'
  *
  * @category Errors
  * @category generated
  */
 export class NotAuthorizedToRecoverError extends Error {
-  readonly code: number = 0xb
+  readonly code: number = 0xc
   readonly name: string = 'NotAuthorizedToRecover'
   constructor() {
     super('The pubkey is not authorized to recover the wallet')
@@ -272,10 +295,33 @@ export class NotAuthorizedToRecoverError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb, () => new NotAuthorizedToRecoverError())
+createErrorFromCodeLookup.set(0xc, () => new NotAuthorizedToRecoverError())
 createErrorFromNameLookup.set(
   'NotAuthorizedToRecover',
   () => new NotAuthorizedToRecoverError()
+)
+
+/**
+ * MissingRecoveredAccounts: 'Required recovered accounts are not passed in'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingRecoveredAccountsError extends Error {
+  readonly code: number = 0xd
+  readonly name: string = 'MissingRecoveredAccounts'
+  constructor() {
+    super('Required recovered accounts are not passed in')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingRecoveredAccountsError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xd, () => new MissingRecoveredAccountsError())
+createErrorFromNameLookup.set(
+  'MissingRecoveredAccounts',
+  () => new MissingRecoveredAccountsError()
 )
 
 /**
@@ -285,7 +331,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InsufficientFundsForTransactionError extends Error {
-  readonly code: number = 0xc
+  readonly code: number = 0xe
   readonly name: string = 'InsufficientFundsForTransaction'
   constructor() {
     super('There is insufficient SOL to transfer')
@@ -296,7 +342,7 @@ export class InsufficientFundsForTransactionError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0xc,
+  0xe,
   () => new InsufficientFundsForTransactionError()
 )
 createErrorFromNameLookup.set(
@@ -311,7 +357,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class OverflowError extends Error {
-  readonly code: number = 0xd
+  readonly code: number = 0xf
   readonly name: string = 'Overflow'
   constructor() {
     super('Operation overflowed')
@@ -321,7 +367,7 @@ export class OverflowError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xd, () => new OverflowError())
+createErrorFromCodeLookup.set(0xf, () => new OverflowError())
 createErrorFromNameLookup.set('Overflow', () => new OverflowError())
 
 /**

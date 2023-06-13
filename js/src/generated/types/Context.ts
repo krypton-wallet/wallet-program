@@ -6,16 +6,15 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type AddRecoveryGuardianArgs = {
-  numGuardians: number
+export type Context = {
+  balanceBefore: beet.bignum
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const addRecoveryGuardianArgsBeet =
-  new beet.BeetArgsStruct<AddRecoveryGuardianArgs>(
-    [['numGuardians', beet.u8]],
-    'AddRecoveryGuardianArgs'
-  )
+export const contextBeet = new beet.BeetArgsStruct<Context>(
+  [['balanceBefore', beet.u64]],
+  'Context'
+)
