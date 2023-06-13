@@ -56,7 +56,7 @@ export type InitializeNativeSolTransferGuardInstructionAccounts = {
   systemProgram?: web3.PublicKey
 }
 
-export const initializeNativeSolTransferGuardInstructionDiscriminator = 12
+export const initializeNativeSolTransferGuardInstructionDiscriminator = 10
 
 /**
  * Creates a _InitializeNativeSolTransferGuard_ instruction.

@@ -19,10 +19,11 @@ export const RecoverWalletStruct = new beet.BeetArgsStruct<{
 /**
  * Accounts required by the _RecoverWallet_ instruction
  *
- * @property [] profileInfo PDA of Krypton Program to be recovered
+ * @property [_writable_] profileInfo PDA of Krypton Program to be recovered
  * @property [] authorityInfo Pubkey of keypair of PDA to be recovered
  * @property [_writable_] newProfileInfo PDA to be recovered into
  * @property [**signer**] newAuthorityInfo Pubkey of the keypair to be recovered into
+ * @property [_writable_] recoveredInfo (optional) PDA previously recovered into profile_info
  * @category Instructions
  * @category RecoverWallet
  * @category generated
@@ -32,12 +33,18 @@ export type RecoverWalletInstructionAccounts = {
   authorityInfo: web3.PublicKey
   newProfileInfo: web3.PublicKey
   newAuthorityInfo: web3.PublicKey
+  recoveredInfo?: web3.PublicKey
 }
 
 export const recoverWalletInstructionDiscriminator = 9
 
 /**
  * Creates a _RecoverWallet_ instruction.
+ *
+ * Optional accounts that are not provided will be omitted from the accounts
+ * array passed with the instruction.
+ * An optional account that is set cannot follow an optional account that is unset.
+ * Otherwise an Error is raised.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
@@ -54,7 +61,7 @@ export function createRecoverWalletInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.profileInfo,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -73,6 +80,14 @@ export function createRecoverWalletInstruction(
       isSigner: true,
     },
   ]
+
+  if (accounts.recoveredInfo != null) {
+    keys.push({
+      pubkey: accounts.recoveredInfo,
+      isWritable: true,
+      isSigner: false,
+    })
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

@@ -26,8 +26,12 @@ pub enum KryptonError {
     MissingGuardianSignatures,
     #[error("Recovery Threshold must be between 1 to 10")]
     InvalidRecoveryThreshold,
+    #[error("The pubkey is not authorized to act on behalf of the wallet")]
+    InvalidAuthority,
     #[error("The pubkey is not authorized to recover the wallet")]
     NotAuthorizedToRecover,
+    #[error("Required recovered accounts are not passed in")]
+    MissingRecoveredAccounts,
     #[error("There is insufficient SOL to transfer")]
     InsufficientFundsForTransaction,
     #[error("Operation overflowed")]

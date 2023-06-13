@@ -1,19 +1,16 @@
 use crate::prelude::*;
 
-use super::AddRecoveryGuardianArgs;
-
 pub fn process_add_recovery_guardians(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    args: AddRecoveryGuardianArgs,
 ) -> ProgramResult {
     let mut account_info_iter = accounts.iter();
 
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
 
-    // ensure the specified amount of guardians are passed in
-    if (args.num_guardians + 2) < accounts.len() as u8 {
+    // ensure guardians are passed in
+    if accounts.len() < 3 {
         return Err(KryptonError::NotEnoughGuardians.into());
     }
 
@@ -35,15 +32,16 @@ pub fn process_add_recovery_guardians(
 
     msg!("account checks complete");
 
-    let mut profile_data = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
+    let mut profile_data = UserProfile::try_from_slice(&profile_info.try_borrow_data()?)?;
+
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
 
     // assert that total number of guardians are less than or equal to MAX_GUARDIANS
-    let guardian_count = profile_data
-        .guardians
-        .into_iter()
-        .filter(|guardian| guardian.pubkey != Pubkey::default())
-        .count();
-    if (guardian_count as u8 + args.num_guardians) > MAX_GUARDIANS {
+    let guardian_count = profile_data.guardians.len();
+    if (guardian_count + accounts.len()) > MAX_GUARDIANS as usize {
         return Err(KryptonError::TooManyGuardians.into());
     }
 
@@ -51,24 +49,19 @@ pub fn process_add_recovery_guardians(
     msg!("old guardian list: {:?}", profile_data.guardians);
 
     // add new guardian(s)
-    for i in 0..args.num_guardians {
+    for i in 2..accounts.len() {
         let guardian_account_info = next_account_info(&mut account_info_iter)?;
         msg!(
             "newly added guardian {}: {:?}",
             i,
             guardian_account_info.key
         );
-        let new_guardian = Guardian {
-            pubkey: *guardian_account_info.key,
-            has_signed: false,
-        };
-        profile_data.guardians[guardian_count + i as usize] = new_guardian;
+        profile_data
+            .guardians
+            .insert(*guardian_account_info.key, false);
     }
 
-    msg!(
-        "new guardian count: {}",
-        guardian_count + args.num_guardians as usize
-    );
+    msg!("new guardian count: {}", profile_data.guardians.len());
     msg!("new guardian list: {:?}", profile_data.guardians);
 
     profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;

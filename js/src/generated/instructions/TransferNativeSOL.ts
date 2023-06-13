@@ -40,7 +40,7 @@ export const TransferNativeSOLStruct = new beet.BeetArgsStruct<
  * Accounts required by the _TransferNativeSOL_ instruction
  *
  * @property [_writable_] profileInfo PDA of Krypton Program
- * @property [**signer**] authorityInfo Pubkey of keypair of PDA
+ * @property [**signer**] authorityInfo Pubkey of authority keypair of PDA
  * @property [_writable_] destination Destination Pubkey
  * @category Instructions
  * @category TransferNativeSOL

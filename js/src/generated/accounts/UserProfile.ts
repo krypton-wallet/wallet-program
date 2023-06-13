@@ -10,48 +10,63 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
 import * as beet from '@metaplex-foundation/beet'
 
 /**
- * Arguments used to create {@link ProfileHeader}
+ * Arguments used to create {@link UserProfile}
  * @category Accounts
  * @category generated
  */
-export type ProfileHeaderArgs = {
+export type UserProfileArgs = {
   seed: web3.PublicKey
   authority: web3.PublicKey
+  recoveryThreshold: number
+  guardians: Map<web3.PublicKey, boolean>
+  recovery: web3.PublicKey
+  recovered: Set<web3.PublicKey>
 }
 /**
- * Holds the data for the {@link ProfileHeader} Account and provides de/serialization
+ * Holds the data for the {@link UserProfile} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class ProfileHeader implements ProfileHeaderArgs {
+export class UserProfile implements UserProfileArgs {
   private constructor(
     readonly seed: web3.PublicKey,
-    readonly authority: web3.PublicKey
+    readonly authority: web3.PublicKey,
+    readonly recoveryThreshold: number,
+    readonly guardians: Map<web3.PublicKey, boolean>,
+    readonly recovery: web3.PublicKey,
+    readonly recovered: Set<web3.PublicKey>
   ) {}
 
   /**
-   * Creates a {@link ProfileHeader} instance from the provided args.
+   * Creates a {@link UserProfile} instance from the provided args.
    */
-  static fromArgs(args: ProfileHeaderArgs) {
-    return new ProfileHeader(args.seed, args.authority)
+  static fromArgs(args: UserProfileArgs) {
+    return new UserProfile(
+      args.seed,
+      args.authority,
+      args.recoveryThreshold,
+      args.guardians,
+      args.recovery,
+      args.recovered
+    )
   }
 
   /**
-   * Deserializes the {@link ProfileHeader} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link UserProfile} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
-  ): [ProfileHeader, number] {
-    return ProfileHeader.deserialize(accountInfo.data, offset)
+  ): [UserProfile, number] {
+    return UserProfile.deserialize(accountInfo.data, offset)
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link ProfileHeader} from its data.
+   * the {@link UserProfile} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -59,15 +74,15 @@ export class ProfileHeader implements ProfileHeaderArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
-  ): Promise<ProfileHeader> {
+  ): Promise<UserProfile> {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig
     )
     if (accountInfo == null) {
-      throw new Error(`Unable to find ProfileHeader account at ${address}`)
+      throw new Error(`Unable to find UserProfile account at ${address}`)
     }
-    return ProfileHeader.fromAccountInfo(accountInfo, 0)[0]
+    return UserProfile.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -81,65 +96,68 @@ export class ProfileHeader implements ProfileHeaderArgs {
       '2aJqX3GKRPAsfByeMkL7y9SqAGmCQEnakbuHJBdxGaDL'
     )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, profileHeaderBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, userProfileBeet)
   }
 
   /**
-   * Deserializes the {@link ProfileHeader} from the provided data Buffer.
+   * Deserializes the {@link UserProfile} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [ProfileHeader, number] {
-    return profileHeaderBeet.deserialize(buf, offset)
+  static deserialize(buf: Buffer, offset = 0): [UserProfile, number] {
+    return userProfileBeet.deserialize(buf, offset)
   }
 
   /**
-   * Serializes the {@link ProfileHeader} into a Buffer.
+   * Serializes the {@link UserProfile} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return profileHeaderBeet.serialize(this)
+    return userProfileBeet.serialize(this)
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link ProfileHeader}
+   * {@link UserProfile} for the provided args.
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
    */
-  static get byteSize() {
-    return profileHeaderBeet.byteSize
+  static byteSize(args: UserProfileArgs) {
+    const instance = UserProfile.fromArgs(args)
+    return userProfileBeet.toFixedFromValue(instance).byteSize
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link ProfileHeader} data from rent
+   * {@link UserProfile} data from rent
    *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
+    args: UserProfileArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      ProfileHeader.byteSize,
+      UserProfile.byteSize(args),
       commitment
     )
   }
 
   /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link ProfileHeader} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === ProfileHeader.byteSize
-  }
-
-  /**
-   * Returns a readable version of {@link ProfileHeader} properties
+   * Returns a readable version of {@link UserProfile} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
       seed: this.seed.toBase58(),
       authority: this.authority.toBase58(),
+      recoveryThreshold: this.recoveryThreshold,
+      guardians: this.guardians,
+      recovery: this.recovery.toBase58(),
+      recovered: this.recovered,
     }
   }
 }
@@ -148,14 +166,20 @@ export class ProfileHeader implements ProfileHeaderArgs {
  * @category Accounts
  * @category generated
  */
-export const profileHeaderBeet = new beet.BeetStruct<
-  ProfileHeader,
-  ProfileHeaderArgs
+export const userProfileBeet = new beet.FixableBeetStruct<
+  UserProfile,
+  UserProfileArgs
 >(
   [
     ['seed', beetSolana.publicKey],
     ['authority', beetSolana.publicKey],
+    ['recoveryThreshold', beet.u8],
+    //@ts-ignore
+    ['guardians', beet.map(beetSolana.publicKey, beet.bool)],
+    ['recovery', beetSolana.publicKey],
+    //@ts-ignore
+    ['recovered', beet.set(beetSolana.publicKey)],
   ],
-  ProfileHeader.fromArgs,
-  'ProfileHeader'
+  UserProfile.fromArgs,
+  'UserProfile'
 )

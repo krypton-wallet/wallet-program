@@ -7,33 +7,16 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
-import {
-  RemoveRecoveryGuardianArgs,
-  removeRecoveryGuardianArgsBeet,
-} from '../types/RemoveRecoveryGuardianArgs'
 
 /**
  * @category Instructions
  * @category RemoveRecoveryGuardians
  * @category generated
  */
-export type RemoveRecoveryGuardiansInstructionArgs = {
-  removeRecoveryGuardianArgs: RemoveRecoveryGuardianArgs
-}
-/**
- * @category Instructions
- * @category RemoveRecoveryGuardians
- * @category generated
- */
-export const RemoveRecoveryGuardiansStruct = new beet.BeetArgsStruct<
-  RemoveRecoveryGuardiansInstructionArgs & {
-    instructionDiscriminator: number
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['removeRecoveryGuardianArgs', removeRecoveryGuardianArgsBeet],
-  ],
+export const RemoveRecoveryGuardiansStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number
+}>(
+  [['instructionDiscriminator', beet.u8]],
   'RemoveRecoveryGuardiansInstructionArgs'
 )
 /**
@@ -58,20 +41,16 @@ export const removeRecoveryGuardiansInstructionDiscriminator = 5
  * Creates a _RemoveRecoveryGuardians_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category RemoveRecoveryGuardians
  * @category generated
  */
 export function createRemoveRecoveryGuardiansInstruction(
   accounts: RemoveRecoveryGuardiansInstructionAccounts,
-  args: RemoveRecoveryGuardiansInstructionArgs,
   programId = new web3.PublicKey('2aJqX3GKRPAsfByeMkL7y9SqAGmCQEnakbuHJBdxGaDL')
 ) {
   const [data] = RemoveRecoveryGuardiansStruct.serialize({
     instructionDiscriminator: removeRecoveryGuardiansInstructionDiscriminator,
-    ...args,
   })
   const keys: web3.AccountMeta[] = [
     {

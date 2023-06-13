@@ -41,7 +41,7 @@ export const TransferTokenStruct = new beet.BeetArgsStruct<
  * Accounts required by the _TransferToken_ instruction
  *
  * @property [] profileInfo PDA of Krypton Program
- * @property [**signer**] authorityInfo Pubkey of keypair of PDA
+ * @property [**signer**] authorityInfo Pubkey of authority keypair of PDA
  * @property [_writable_] tokenAccountInfo ATA of the PDA
  * @property [_writable_] destTokenAccountInfo Destination Token Account
  * @category Instructions
