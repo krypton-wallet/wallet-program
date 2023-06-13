@@ -1628,6 +1628,7 @@ dependencies = [
  "borsh",
  "bytemuck",
  "chrono",
+ "mpl-utils",
  "num-derive",
  "num-traits",
  "shank",
@@ -1877,6 +1878,18 @@ dependencies = [
  "proc-macro2 1.0.58",
  "quote 1.0.27",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "mpl-utils"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "822133b6cba8f9a43e5e0e189813be63dd795858f54155c729833be472ffdb51"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "spl-token",
 ]
 
 [[package]]

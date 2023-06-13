@@ -6,6 +6,14 @@ use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 use std::collections::{HashMap, HashSet};
 
+pub use self::native_sol_transfer_guard::{NativeSolTransferGuard, NativeSolTransferInterval};
+
+/*
+    32: authority pubkey
+    1: recovery_threshold
+    330: 33 * 10 space (32: pubkey, 1: has_signed) for MAX_GUARDIANS guardians
+    32: recovery pubkey
+*/
 pub const MAX_GUARDIANS: u8 = 10;
 /*
     32: seed pubkey
@@ -51,4 +59,16 @@ pub struct ProfileHeader {
     pub seed: Pubkey,
     /// authority keypair Pubkey
     pub authority: Pubkey,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+pub enum Guard {
+    NativeSolTransfer(NativeSolTransferGuard),
+}
+
+// add an account to hold guards?
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, ShankAccount)]
+pub struct GuardAccount {
+    pub target: Pubkey,
+    pub guard: Guard,
 }

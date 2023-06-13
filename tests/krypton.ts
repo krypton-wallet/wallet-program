@@ -4,6 +4,7 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   Transaction,
+  SystemProgram,
 } from "@solana/web3.js";
 import * as krypton from "../js/src/generated";
 
@@ -54,38 +55,76 @@ const run = async () => {
     console.log("profile not found");
   }
 
-  // add a recovery guardian
-  const guardianKeypair = Keypair.generate();
-  const addGuardianIx = krypton.createAddRecoveryGuardiansInstruction({
+  // // add a recovery guardian
+  // const guardianKeypair = Keypair.generate();
+  // const addGuardianIx = krypton.createAddRecoveryGuardiansInstruction({
+  //   profileInfo: profileAddress,
+  //   authorityInfo: feePayerKeypair.publicKey,
+  //   guardian: guardianKeypair.publicKey,
+  // }, {
+  //   addRecoveryGuardianArgs: {
+  //     numGuardians: 1,
+  //   },
+  // });
+
+  // const addGuardianTx = new Transaction();
+  // addGuardianTx.add(addGuardianIx);
+
+  // const addGuardianSig = await connection.sendTransaction(addGuardianTx, [
+  //   feePayerKeypair,
+  // ], { skipPreflight: true });
+
+  // await connection.confirmTransaction(addGuardianSig);
+
+  // const profileAccountAfter = await connection.getAccountInfo(profileAddress);
+  // if (profileAccountAfter) {
+  //   const [profile] = krypton.ProfileHeader.fromAccountInfo(
+  //     profileAccountAfter,
+  //   );
+  //   console.log(profile);
+
+  //   profile.guardians.forEach((guardian) => {
+  //     console.log("guardian");
+  //     console.log(guardian.pubkey.toString());
+  //   });
+  // } else {
+  //   throw new Error("profile not found");
+  // }
+
+  let [guardAddress] = findGuardAddress(profileAddress);
+  console.log("guard address", guardAddress.toString());
+  let createGuardIx = krypton.createInitializeNativeSolTransferGuardInstruction({
     profileInfo: profileAddress,
     authorityInfo: feePayerKeypair.publicKey,
-    guardian: guardianKeypair.publicKey,
+    guardInfo: guardAddress,
+    systemProgram: SystemProgram.programId
   }, {
-    addRecoveryGuardianArgs: {
-      numGuardians: 1,
-    },
+    initializeNativeSolTransferGuardArgs: {
+      target: profileAddress,
+      transferAmount: LAMPORTS_PER_SOL
+    }
   });
 
-  const addGuardianTx = new Transaction();
-  addGuardianTx.add(addGuardianIx);
+  const createGuardTx = new Transaction();
+  createGuardTx.add(createGuardIx);
 
-  const addGuardianSig = await connection.sendTransaction(addGuardianTx, [
+  const createGuardSig = await connection.sendTransaction(createGuardTx, [
     feePayerKeypair,
   ], { skipPreflight: true });
 
-  await connection.confirmTransaction(addGuardianSig);
+  await connection.confirmTransaction(createGuardSig);
 
-  const profileAccountAfter = await connection.getAccountInfo(profileAddress);
-  if (profileAccountAfter) {
-    const [profile] = krypton.ProfileHeader.fromAccountInfo(
-      profileAccountAfter,
+  const guardAccountAfter = await connection.getAccountInfo(guardAddress);
+  if (guardAccountAfter) {
+    const [profile] = krypton.GuardAccount.fromAccountInfo(
+      guardAccountAfter,
     );
     console.log(profile);
 
-    profile.guardians.forEach((guardian) => {
-      console.log("guardian");
-      console.log(guardian.pubkey.toString());
-    });
+    console.log("target: ")
+    console.log(profile.target)
+    console.log("guard: ")
+    console.log(profile.guard.fields[0])
   } else {
     throw new Error("profile not found");
   }
@@ -99,3 +138,7 @@ const findProfileAddress = (authority: PublicKey) => {
     krypton.PROGRAM_ID,
   );
 };
+
+const findGuardAddress = (profile: PublicKey) => {
+  return PublicKey.findProgramAddressSync([Buffer.from("guard"), profile.toBuffer()], krypton.PROGRAM_ID)
+}

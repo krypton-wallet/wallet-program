@@ -1,4 +1,6 @@
 export * from './Context'
+export * from './Guard'
+export * from './InitializeNativeSolTransferGuardArgs'
 export * from './InitializeWalletArgs'
 export * from './ModifyRecoveryThresholdArgs'
 export * from './NativeSolTransferGuard'

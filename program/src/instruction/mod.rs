@@ -1,5 +1,6 @@
 pub mod add_recovery_guardians;
 pub mod add_recovery_sign;
+pub mod initialize_native_sol_transfer_guard;
 pub mod initialize_recovery;
 pub mod initialize_wallet;
 pub mod modify_recovery_threshold;
@@ -8,6 +9,8 @@ pub mod remove_recovery_guardians;
 pub mod transfer_native_sol;
 pub mod transfer_token;
 pub mod wrap_instruction;
+
+use crate::prelude::*;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
@@ -36,6 +39,12 @@ pub struct WrapInstructionArgs {
 #[derive(Clone, BorshSerialize, BorshDeserialize)]
 pub struct ModifyRecoveryThresholdArgs {
     pub new_threshold: u8,
+}
+
+#[derive(Clone, BorshSerialize, BorshDeserialize)]
+pub struct InitializeNativeSolTransferGuardArgs {
+    pub target: Pubkey,
+    pub transfer_amount: u64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
@@ -106,4 +115,11 @@ pub enum KryptonInstruction {
     #[account(3, signer, name = "new_authority_info", desc = "Pubkey of the keypair to be recovered into")]
     #[account(4, writable, optional, name = "recovered_info", desc = "PDA previously recovered into profile_info")]
     RecoverWallet,
+
+
+    #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program to be recovered")]
+    #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
+    #[account(2, writable, name = "guard_info", desc = "PDA of the guard account that will be initialized")]
+    #[account(3, name = "system_program", desc = "system program, used to create the new guard account")]
+    InitializeNativeSolTransferGuard(InitializeNativeSolTransferGuardArgs)
 }

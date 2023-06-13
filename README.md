@@ -27,6 +27,7 @@ Purpose: initialize social wallet program with pda corresponding to authority an
 - initialize ProfileHeader with given info and serialize into pda data
 
 ProfileHeader format:
+
 <table>
   <tr>
    <td>
@@ -103,6 +104,9 @@ Purpose: transfer to a destination token account and break into two cases: recov
 - Close the src token account iff recovery_mode == 1
 - Both transfer and close are signed by new feePayer
 
-### Update Secret
+## Instructions to run locally
 
-updates the encrypted keys stored in the account
+1. In the `program` directory and run `cargo-build-sbf` and `cargo build`
+2. If the state or instructions or accounts to instructions change: navigate to `js` and run `npm run api:gen`
+3. To start amman, navigate to `tests` and run `npx amman start`
+4. To run a custom `[test].ts` test, navigate to the directory and run `npx ts-node [test].ts` <br />**NOTE**: Ensure node version 16 using `nvm use 16`

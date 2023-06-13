@@ -14,7 +14,7 @@ import {
 } from './NativeSolTransferInterval'
 import { Context, contextBeet } from './Context'
 export type NativeSolTransferGuard = {
-  guarded: web3.PublicKey
+  target: web3.PublicKey
   transferAmountRemaining: beet.bignum
   transferLimit: beet.bignum
   transferInterval: NativeSolTransferInterval
@@ -29,7 +29,7 @@ export type NativeSolTransferGuard = {
 export const nativeSolTransferGuardBeet =
   new beet.FixableBeetArgsStruct<NativeSolTransferGuard>(
     [
-      ['guarded', beetSolana.publicKey],
+      ['target', beetSolana.publicKey],
       ['transferAmountRemaining', beet.u64],
       ['transferLimit', beet.u64],
       ['transferInterval', nativeSolTransferIntervalBeet],

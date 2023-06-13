@@ -371,6 +371,121 @@ createErrorFromCodeLookup.set(0xf, () => new OverflowError())
 createErrorFromNameLookup.set('Overflow', () => new OverflowError())
 
 /**
+ * InvalidAccountAddress: 'Invalid Account Address'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAccountAddressError extends Error {
+  readonly code: number = 0x10
+  readonly name: string = 'InvalidAccountAddress'
+  constructor() {
+    super('Invalid Account Address')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAccountAddressError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x10, () => new InvalidAccountAddressError())
+createErrorFromNameLookup.set(
+  'InvalidAccountAddress',
+  () => new InvalidAccountAddressError()
+)
+
+/**
+ * InvalidDateTime: 'Invalid date time'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDateTimeError extends Error {
+  readonly code: number = 0x11
+  readonly name: string = 'InvalidDateTime'
+  constructor() {
+    super('Invalid date time')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDateTimeError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x11, () => new InvalidDateTimeError())
+createErrorFromNameLookup.set(
+  'InvalidDateTime',
+  () => new InvalidDateTimeError()
+)
+
+/**
+ * TargetAccountNotFound: 'Target account not found'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TargetAccountNotFoundError extends Error {
+  readonly code: number = 0x12
+  readonly name: string = 'TargetAccountNotFound'
+  constructor() {
+    super('Target account not found')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TargetAccountNotFoundError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x12, () => new TargetAccountNotFoundError())
+createErrorFromNameLookup.set(
+  'TargetAccountNotFound',
+  () => new TargetAccountNotFoundError()
+)
+
+/**
+ * GuardContextNotFound: 'Guard Context not found'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class GuardContextNotFoundError extends Error {
+  readonly code: number = 0x13
+  readonly name: string = 'GuardContextNotFound'
+  constructor() {
+    super('Guard Context not found')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, GuardContextNotFoundError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x13, () => new GuardContextNotFoundError())
+createErrorFromNameLookup.set(
+  'GuardContextNotFound',
+  () => new GuardContextNotFoundError()
+)
+
+/**
+ * ArithmeticOverflow: 'Arithmetic Overflow'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ArithmeticOverflowError extends Error {
+  readonly code: number = 0x14
+  readonly name: string = 'ArithmeticOverflow'
+  constructor() {
+    super('Arithmetic Overflow')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ArithmeticOverflowError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x14, () => new ArithmeticOverflowError())
+createErrorFromNameLookup.set(
+  'ArithmeticOverflow',
+  () => new ArithmeticOverflowError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
