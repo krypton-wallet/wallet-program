@@ -1,3 +1,5 @@
+use solana_program::program_memory::sol_memcpy;
+
 use crate::prelude::*;
 
 pub fn process_remove_recovery_guardians(
@@ -51,7 +53,26 @@ pub fn process_remove_recovery_guardians(
     }
     msg!("new guardian list: {:?}", profile_data.guardians);
 
-    profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
+    let serialized_profile_data = profile_data.try_to_vec()?;
+
+    // refund lamports to authority_info
+    let new_minimum_balance = Rent::get()?.minimum_balance(serialized_profile_data.len());
+    let lamports_diff = profile_info.lamports().saturating_sub(new_minimum_balance);
+    let authority_info_lamports = authority_info.lamports();
+    **authority_info.lamports.borrow_mut() = authority_info_lamports
+        .checked_add(lamports_diff)
+        .ok_or(KryptonError::Overflow)?;
+    **profile_info.lamports.borrow_mut() = new_minimum_balance;
+
+    // realloc profile_info down
+    profile_info.realloc(serialized_profile_data.len(), false)?;
+
+    // update profile_info data
+    sol_memcpy(
+        *profile_info.try_borrow_mut_data()?,
+        &serialized_profile_data,
+        serialized_profile_data.len(),
+    );
 
     Ok(())
 }
