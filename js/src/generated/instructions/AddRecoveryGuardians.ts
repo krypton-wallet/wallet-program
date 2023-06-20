@@ -32,6 +32,7 @@ export const AddRecoveryGuardiansStruct = new beet.BeetArgsStruct<{
 export type AddRecoveryGuardiansInstructionAccounts = {
   profileInfo: web3.PublicKey
   authorityInfo: web3.PublicKey
+  systemProgram?: web3.PublicKey
   guardian: web3.PublicKey
 }
 
@@ -62,6 +63,11 @@ export function createAddRecoveryGuardiansInstruction(
       pubkey: accounts.authorityInfo,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.guardian,

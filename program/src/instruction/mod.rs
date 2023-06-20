@@ -77,9 +77,11 @@ pub enum KryptonInstruction {
     WrapInstruction(WrapInstructionArgs),
 
     /// This instruction adds a Pubkey that will act as a guardian during recovery of the wallet
+    /// multiple guardian accounts may be added
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program")]
     #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA")]
-    #[account(2, name = "guardian", desc = "Pubkey that will act as guardian to recover profile_info")]
+    #[account(2, name = "system_program", desc = "system program to resize account")]
+    #[account(3, name = "guardian", desc = "Pubkey that will act as guardian to recover profile_info")]
     AddRecoveryGuardians,
 
     /// This instruction removes a Pubkey that will act as a guardian during recovery of the wallet

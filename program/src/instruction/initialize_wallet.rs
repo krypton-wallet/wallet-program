@@ -36,7 +36,7 @@ pub fn process_initialize_wallet(
 
     msg!("account checks complete");
 
-    // create ProfileHeader
+    // create UserProfile
     let initial_data = UserProfile {
         seed: *authority_info.key,
         authority: *authority_info.key,

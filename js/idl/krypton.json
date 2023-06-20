@@ -176,6 +176,12 @@
           "desc": "Pubkey of keypair of PDA"
         },
         {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "system program to resize account"
+        },
+        {
           "name": "guardian",
           "isMut": false,
           "isSigner": false,

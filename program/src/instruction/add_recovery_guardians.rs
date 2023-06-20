@@ -1,3 +1,6 @@
+use mpl_utils::resize_or_reallocate_account_raw;
+use solana_program::program_memory::sol_memcpy;
+
 use crate::prelude::*;
 
 pub fn process_add_recovery_guardians(
@@ -48,8 +51,10 @@ pub fn process_add_recovery_guardians(
     msg!("old guardian count: {}", guardian_count);
     msg!("old guardian list: {:?}", profile_data.guardians);
 
+    let system_program = next_account_info(&mut account_info_iter)?;
+    msg!("system program id: {:?}", system_program.key);
     // add new guardian(s)
-    for i in 2..accounts.len() {
+    for i in 3..accounts.len() {
         let guardian_account_info = next_account_info(&mut account_info_iter)?;
         msg!(
             "newly added guardian {}: {:?}",
@@ -64,7 +69,11 @@ pub fn process_add_recovery_guardians(
     msg!("new guardian count: {}", profile_data.guardians.len());
     msg!("new guardian list: {:?}", profile_data.guardians);
 
-    profile_data.serialize(&mut &mut profile_info.data.borrow_mut()[..])?;
+    let serialized_profile_data = profile_data.try_to_vec()?;
+    resize_or_reallocate_account_raw(profile_info, authority_info, system_program, serialized_profile_data.len())?;
+    // profile_data.serialize(&mut buf)?;
+    sol_memcpy(*profile_info.try_borrow_mut_data()?, &serialized_profile_data, serialized_profile_data.len());
+    // TODO: resize account
 
     Ok(())
 }
