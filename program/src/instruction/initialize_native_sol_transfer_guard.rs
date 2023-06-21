@@ -1,5 +1,4 @@
 use solana_program::program_memory::sol_memcpy;
-use solana_program::system_instruction;
 
 use crate::prelude::*;
 use crate::state::{Guard, GuardAccount, NativeSolTransferGuard, NativeSolTransferInterval};
@@ -7,7 +6,7 @@ use crate::state::{Guard, GuardAccount, NativeSolTransferGuard, NativeSolTransfe
 use super::InitializeNativeSolTransferGuardArgs;
 
 pub fn process_initialize_native_sol_transfer_guard(
-    _program_id: &Pubkey,
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: InitializeNativeSolTransferGuardArgs,
 ) -> ProgramResult {
@@ -15,10 +14,33 @@ pub fn process_initialize_native_sol_transfer_guard(
     let profile_info = next_account_info(&mut account_info_iter)?;
     let authority_info = next_account_info(&mut account_info_iter)?;
     let guard_info = next_account_info(&mut account_info_iter)?;
-    let _system_program_info = next_account_info(&mut account_info_iter)?;
+    let system_program = next_account_info(&mut account_info_iter);
 
-    let profile = ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?)?;
+    // ensure authority_info is signer
+    if !authority_info.is_signer {
+        return Err(KryptonError::NotSigner.into());
+    }
 
+    // ensure profile_info and guard_info are writable
+    if !profile_info.is_writable || !guard_info.is_writable {
+        return Err(KryptonError::NotWriteable.into());
+    }
+
+    let profile_data =
+        ProfileHeader::try_from_slice(&profile_info.try_borrow_data()?[..PROFILE_HEADER_LEN])?;
+
+    // ensure authority_info is valid
+    if profile_data.authority != *authority_info.key {
+        return Err(KryptonError::InvalidAuthority.into());
+    }
+
+    // ensure seed_info is valid
+    let (profile_pda, _) = get_profile_pda(&profile_data.seed, program_id);
+    if profile_pda != *profile_info.key {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    // ensure guard_info is valid
     let guard_seeds = &[b"guard", profile_info.key.as_ref()];
     let guard_bump = assert_derivation(
         &crate::id(),
@@ -28,15 +50,7 @@ pub fn process_initialize_native_sol_transfer_guard(
     )?;
     let guard_signer_seeds = &[b"guard", profile_info.key.as_ref(), &[guard_bump]];
 
-    let profile_seeds = &[PDA_SEED, profile.authority.as_ref()];
-    let profile_bump = assert_derivation(
-        &crate::id(),
-        profile_info,
-        profile_seeds,
-        KryptonError::InvalidAccountAddress,
-    )?;
-
-    let _profile_signer_seeds = &[PDA_SEED, profile.authority.as_ref(), &[profile_bump]];
+    msg!("account checks complete");
 
     let sol_guard = NativeSolTransferGuard::new(
         profile_info.key,
@@ -47,37 +61,32 @@ pub fn process_initialize_native_sol_transfer_guard(
         guard: Guard::NativeSolTransfer(sol_guard),
         target: profile_info.key.to_owned(),
     };
-
     let serialized = guard_account.try_to_vec()?;
-    msg!("serialized size: {}", serialized.len());
     let required_lamports = Rent::get()?.minimum_balance(serialized.len());
 
-    // create_or_allocate_account_raw(
-    //     crate::id(),
-    //     guard_info,
-    //     system_program_info,
-    //     profile_info,
-    //     serialized.len(),
-    //     profile_signer_seeds,
-    //     guard_signer_seeds,
-    // )?;
-    let create_profile_account_instruction = create_account(
+    let create_guard_ix = create_account(
         authority_info.key,
         guard_info.key,
         required_lamports,
         serialized.len() as u64,
         &crate::id(),
     );
-    // invoke CPI to create profile account
+    // invoke CPI to create guard account
     invoke_signed(
-        &create_profile_account_instruction,
-        &[authority_info.clone(), guard_info.clone()],
+        &create_guard_ix,
+        &[
+            authority_info.clone(),
+            guard_info.clone(),
+            system_program.expect("system program").clone(),
+        ],
         &[guard_signer_seeds],
     )?;
-    msg!("created account with system program");
+
+    msg!("guard account created");
 
     // ensure there is enough SOL to transfer
-    if **profile_info.try_borrow_lamports()? < required_lamports {
+    let profile_data_lamports = Rent::get()?.minimum_balance(profile_info.data_len());
+    if **profile_info.try_borrow_lamports()? < (profile_data_lamports + required_lamports) {
         return Err(ProgramError::InsufficientFunds);
     }
 
@@ -98,62 +107,6 @@ pub fn process_initialize_native_sol_transfer_guard(
         serialized.as_slice(),
         serialized.len(),
     );
-
-    Ok(())
-}
-
-pub fn create_or_allocate_account_raw<'a>(
-    program_id: Pubkey,
-    new_account_info: &AccountInfo<'a>,
-    system_program_info: &AccountInfo<'a>,
-    payer_info: &AccountInfo<'a>,
-    size: usize,
-    signer_seeds: &[&[u8]],
-    new_account_signer_seeds: &[&[u8]],
-) -> ProgramResult {
-    let rent = &Rent::get()?;
-    let required_lamports = rent
-        .minimum_balance(size)
-        .max(1)
-        .saturating_sub(new_account_info.lamports());
-
-    if required_lamports > 0 {
-        msg!("Transfer {} lamports to the new account", required_lamports);
-        // // ensure there is enough SOL to transfer
-        // if **payer_info.try_borrow_lamports()? < required_lamports {
-        //     return Err(ProgramError::InsufficientFunds);
-        // }
-
-        // // debit profile_info and credit dest
-        // **payer_info.try_borrow_mut_lamports()? -= required_lamports;
-        // **new_account_info.try_borrow_mut_lamports()? += required_lamports;
-
-        invoke_signed(
-            &system_instruction::transfer(payer_info.key, new_account_info.key, required_lamports),
-            &[
-                payer_info.clone(),
-                new_account_info.clone(),
-                system_program_info.clone(),
-            ],
-            &[signer_seeds],
-        )?;
-    }
-
-    let accounts = &[new_account_info.clone(), system_program_info.clone()];
-
-    msg!("Allocate space for the account");
-    invoke_signed(
-        &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
-        accounts,
-        &[new_account_signer_seeds],
-    )?;
-
-    msg!("Assign the account to the owning program");
-    invoke_signed(
-        &system_instruction::assign(new_account_info.key, &program_id),
-        accounts,
-        &[new_account_signer_seeds],
-    )?;
 
     Ok(())
 }
