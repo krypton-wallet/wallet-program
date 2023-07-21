@@ -42,6 +42,7 @@ export const TransferNativeSOLStruct = new beet.BeetArgsStruct<
  * @property [_writable_] profileInfo PDA of Krypton Program
  * @property [**signer**] authorityInfo Pubkey of authority keypair of PDA
  * @property [_writable_] destination Destination Pubkey
+ * @property [_writable_] guard (optional) PDA of guard account
  * @category Instructions
  * @category TransferNativeSOL
  * @category generated
@@ -50,12 +51,18 @@ export type TransferNativeSOLInstructionAccounts = {
   profileInfo: web3.PublicKey
   authorityInfo: web3.PublicKey
   destination: web3.PublicKey
+  guard?: web3.PublicKey
 }
 
 export const transferNativeSOLInstructionDiscriminator = 2
 
 /**
  * Creates a _TransferNativeSOL_ instruction.
+ *
+ * Optional accounts that are not provided will be omitted from the accounts
+ * array passed with the instruction.
+ * An optional account that is set cannot follow an optional account that is unset.
+ * Otherwise an Error is raised.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -90,6 +97,14 @@ export function createTransferNativeSOLInstruction(
       isSigner: false,
     },
   ]
+
+  if (accounts.guard != null) {
+    keys.push({
+      pubkey: accounts.guard,
+      isWritable: true,
+      isSigner: false,
+    })
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

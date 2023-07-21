@@ -42,6 +42,8 @@ pub enum KryptonError {
     InvalidDateTime,
     #[error("Target account not found")]
     TargetAccountNotFound,
+    #[error("Invalid target for guard")]
+    InvalidGuardTarget,
     #[error("Guard Context not found")]
     GuardContextNotFound,
     #[error("Arithmetic Overflow")]

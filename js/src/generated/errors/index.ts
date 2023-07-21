@@ -440,13 +440,36 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * InvalidGuardTarget: 'Invalid target for guard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidGuardTargetError extends Error {
+  readonly code: number = 0x13
+  readonly name: string = 'InvalidGuardTarget'
+  constructor() {
+    super('Invalid target for guard')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidGuardTargetError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x13, () => new InvalidGuardTargetError())
+createErrorFromNameLookup.set(
+  'InvalidGuardTarget',
+  () => new InvalidGuardTargetError()
+)
+
+/**
  * GuardContextNotFound: 'Guard Context not found'
  *
  * @category Errors
  * @category generated
  */
 export class GuardContextNotFoundError extends Error {
-  readonly code: number = 0x13
+  readonly code: number = 0x14
   readonly name: string = 'GuardContextNotFound'
   constructor() {
     super('Guard Context not found')
@@ -456,7 +479,7 @@ export class GuardContextNotFoundError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x13, () => new GuardContextNotFoundError())
+createErrorFromCodeLookup.set(0x14, () => new GuardContextNotFoundError())
 createErrorFromNameLookup.set(
   'GuardContextNotFound',
   () => new GuardContextNotFoundError()
@@ -469,7 +492,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class ArithmeticOverflowError extends Error {
-  readonly code: number = 0x14
+  readonly code: number = 0x15
   readonly name: string = 'ArithmeticOverflow'
   constructor() {
     super('Arithmetic Overflow')
@@ -479,7 +502,7 @@ export class ArithmeticOverflowError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x14, () => new ArithmeticOverflowError())
+createErrorFromCodeLookup.set(0x15, () => new ArithmeticOverflowError())
 createErrorFromNameLookup.set(
   'ArithmeticOverflow',
   () => new ArithmeticOverflowError()

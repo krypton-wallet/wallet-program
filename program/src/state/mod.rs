@@ -1,4 +1,4 @@
-mod guard;
+pub(crate) mod guard;
 mod native_sol_transfer_guard;
 
 use borsh::{BorshDeserialize, BorshSerialize};

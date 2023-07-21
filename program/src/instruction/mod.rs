@@ -67,6 +67,7 @@ pub enum KryptonInstruction {
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program")]
     #[account(1, signer, name = "authority_info", desc = "Pubkey of authority keypair of PDA")]
     #[account(2, writable, name = "destination", desc = "Destination Pubkey")]
+    #[account(3, writable, optional, name = "guard", desc = "PDA of guard account")]
     TransferNativeSOL(TransferNativeSOLArgs),
 
     /// This instruction wraps the passed in instruction and invoke_signs it using the PDA

@@ -1,7 +1,7 @@
 use chrono::{Duration, NaiveDateTime};
 use solana_program::clock::Clock;
 
-use super::guard::Guard;
+use super::guard::GuardTrait;
 use crate::prelude::*;
 
 #[non_exhaustive]
@@ -60,7 +60,7 @@ impl NativeSolTransferGuard {
     }
 }
 
-impl Guard for NativeSolTransferGuard {
+impl GuardTrait for NativeSolTransferGuard {
     fn setup(&mut self, accounts: &[AccountInfo]) -> ProgramResult {
         let target = accounts
             .iter()
@@ -94,7 +94,6 @@ impl Guard for NativeSolTransferGuard {
         } else {
             self.transfer_limit
         };
-
         match transfer_budget.checked_sub(desired_transfer_amount) {
             Some(new_amount_remaining) => {
                 self.transfer_amount_remaining = new_amount_remaining;

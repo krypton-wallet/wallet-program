@@ -104,6 +104,13 @@
           "isMut": true,
           "isSigner": false,
           "desc": "Destination Pubkey"
+        },
+        {
+          "name": "guard",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA of guard account",
+          "optional": true
         }
       ],
       "args": [
@@ -740,11 +747,16 @@
     },
     {
       "code": 19,
+      "name": "InvalidGuardTarget",
+      "msg": "Invalid target for guard"
+    },
+    {
+      "code": 20,
       "name": "GuardContextNotFound",
       "msg": "Guard Context not found"
     },
     {
-      "code": 20,
+      "code": 21,
       "name": "ArithmeticOverflow",
       "msg": "Arithmetic Overflow"
     }
