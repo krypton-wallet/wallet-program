@@ -1,29 +1,39 @@
-cargo-features = ["edition2021"]
-
 [package]
-name = "recovery"
+name = "krypton"
 version = "0.1.0"
 edition = "2021"
 license = "WTFPL"
 publish = false
 
 [dependencies]
-borsh = "0.9"
-bytemuck = {version = "1.7.2", features = ["derive"]}
-solana-program = "=1.14.11"
-spl-token = {version = "3.1.1", features = ["no-entrypoint"]}
+borsh = "0.9.3"
+bytemuck = "1.13.1"
+solana-program = "1.14.18"
+spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 num-traits = "0.2.14"
 num-derive = "0.3"
 thiserror = "1.0"
+shank = "0.0.12"
+chrono = { version = "*", default-features = false, features = ["alloc"]}
+mpl-utils = "0.2.0"
+
+
+# We don't use these deps at all,
+# we just need to downgrade these deps since `cargo-build-sbf`
+# uses rustc 1.62.0-dev and these require rustc <= 1.64.0
+toml_edit = "=0.19.5"
+toml_datetime = "=0.6.1"
+# winnow = "=0.4.1"
 
 [features]
 test-bpf = []
 
 [dev-dependencies]
-assert_matches = "1.4.0"
-solana-program-test = "=1.14.11"
-solana-sdk = "=1.14.11"
-solana-validator = "=1.14.11"
+solana-sdk = "1.14.18"
+solana-program-test = "1.14.18"
 
 [lib]
 crate-type = ["cdylib", "lib"]
+
+[profile.release]
+overflow-checks = true
