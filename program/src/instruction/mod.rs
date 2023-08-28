@@ -50,6 +50,7 @@ pub struct InitializeNativeSolTransferGuardArgs {
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
 pub enum KryptonInstruction {
+    /// This instruction initializes the wallet
     #[account(0, writable, name="profile_info", desc="PDA of Krypton Program")]
     #[account(1, signer, name="authority_info", desc="Pubkey of keypair of PDA")]
     #[account(2, name="system_program", desc="Used to create/reassign the PDA")]
@@ -119,7 +120,7 @@ pub enum KryptonInstruction {
     #[account(4, writable, optional, name = "recovered_info", desc = "PDA previously recovered into profile_info")]
     RecoverWallet,
 
-
+    /// This instruction initializes the native SOL transfer guard 
     #[account(0, writable, name = "profile_info", desc = "PDA of Krypton Program to be recovered")]
     #[account(1, signer, name = "authority_info", desc = "Pubkey of keypair of PDA to be recovered")]
     #[account(2, writable, name = "guard_info", desc = "PDA of the guard account that will be initialized")]
